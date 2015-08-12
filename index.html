@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Spriter Scon Runtime</title>
+</head>
+<body>
+  <script src="pixi.js"></script>
+  <script src="spriter.js"></script>
+
+  <script>
+    var renderDebugData = false;
+    var renderDebugPose = false;
+
+    var data = new spriter.Data();
+    var pose = new spriter.Pose(data);
+
+    function loadScon(sconStr) {
+      var scon = JSON.parse(sconStr);
+      console.log(scon);
+      // Load scon data
+      data.load(scon);
+      console.log(scon);
+
+      // Set entity and animation
+      // var entityKeys = pose.getEntityKeys();
+      // pose.setEntity(entityKeys[0]);
+
+      // var animKeys = pose.getAnimKeys();
+      // pose.setAnim(animKeys[0]);
+
+      // Load textures
+      // data.folder_array.forEach(function(folder) {
+      //   folder.file_array.forEach(function(file) {
+      //     var imageKey = file.name;
+      //     console.log('load image: %s', imageKey);
+      //   });
+      // });
+    }
+
+    PIXI.loader
+      .add('GreyGuy/player.scon')
+      .after(function(res, next) {
+        loadScon(res.data);
+        next();
+      })
+      .once('complete', function() {
+        console.log('load scon complete');
+      })
+      .load();
+  </script>
+</body>
+</html>

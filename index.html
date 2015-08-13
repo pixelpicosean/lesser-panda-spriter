@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Spriter Scon Runtime</title>
+  <title>Spriter for LesserPanda</title>
 </head>
 <body>
   <script src="pixi.js"></script>
@@ -18,9 +18,6 @@
     var animRate = 1;
     var animRepeat = 2;
 
-    var data = new spriter.Data();
-    var pose = new spriter.Pose(data);
-
     function sconMiddleWare(res, next) {
       if (res.url.match(/\.scon$/)) {
           // console.log('%s is scon', res.url);
@@ -28,15 +25,16 @@
           var atlasUrl = res.url.replace(/\.scon$/, '.json');
           // console.log(atlasUrl);
           PIXI.loader.add(atlasUrl);
-          loadScon(res.data);
         }
         next();
     }
 
-    function loadScon(sconStr) {
+    function createSpriter(sconStr) {
       var scon = JSON.parse(sconStr);
+
       // Load scon data
-      data.load(scon);
+      var data = new spriter.Data().load(scon);
+      var pose = new spriter.Pose(data);
 
       // Set entity and animation
       var entityKeys = pose.getEntityKeys();
@@ -44,10 +42,12 @@
 
       var animKeys = pose.getAnimKeys();
       pose.setAnim(animKeys[0]);
+
+      return pose;
     }
 
     PIXI.loader
-      .add('GreyGuy/player.scon')
+      .add('player.scon', 'GreyGuy/player.scon')
       .after(sconMiddleWare)
       .once('complete', start)
       .load();
@@ -58,56 +58,37 @@
       });
       var stage = new PIXI.Container();
 
-      var animation = new PIXI.Container();
-      animation.scale.y = -1;
-      animation.position.set(300, 300);
-      animation.sprites = {};
-      stage.addChild(animation);
+      // Create and init a spriter object
+      var greyGuy = createSpriter(PIXI.loader.resources['player.scon'].data);
+      greyGuy.container.position.set(300, 300);
+      stage.addChild(greyGuy.container);
+
+      greyGuy.setAnim('idle');
 
       var prevTime = 0;
       function render(time) {
+        requestAnimationFrame(render);
+
         // Delta time
         var dt = time - (prevTime || time);
         prevTime = time;
 
         // Update animation
-        animTime += dt * animRate;
+        greyGuy.update(dt * animRate);
+        greyGuy.strike();
 
-        var anim = pose.curAnim();
-        if (anim && (animTime >= anim.length * animRepeat)) {
-          var animKeys = pose.getAnimKeys();
-          var animKey = animKeys[(animKeys.indexOf(pose.getAnim()) + 1) % animKeys.length];
-          pose.setAnim(animKey);
-          pose.setTime(0);
-          animTime = 0;
-        }
-
-        pose.strike();
-
-        pose.object_array.forEach(function(obj) {
-          var folder = data.folder_array[obj.folder_index];
-          var file = folder.file_array[obj.file_index];
-          var spriteName = file.name;
-
-          var sprite = animation.sprites[spriteName];
-          if (!sprite) {
-            sprite = new PIXI.Sprite.fromFrame(spriteName);
-            sprite.anchor.set(0.5, 0.5);
-            animation.addChild(sprite);
-            animation.sprites[spriteName] = sprite;
-          }
-
-          // Apply transform
-          var model = obj.world_space;
-          sprite.position.set(model.position.x, model.position.y);
-          sprite.rotation = model.rotation.rad;
-          sprite.scale.set(model.scale.x, -model.scale.y);
-          sprite.alpha = obj.alpha;
-        });
+        // Change animation
+        // animTime += dt * animRate;
+        // var anim = greyGuy.curAnim();
+        // if (anim && (animTime >= anim.length * animRepeat)) {
+        //   var animKeys = greyGuy.getAnimKeys();
+        //   var animKey = animKeys[(animKeys.indexOf(greyGuy.getAnim()) + 1) % animKeys.length];
+        //   greyGuy.setAnim(animKey);
+        //   greyGuy.setTime(0);
+        //   animTime = 0;
+        // }
 
         renderer.render(stage);
-
-        requestAnimationFrame(render);
       }
 
       requestAnimationFrame(render);

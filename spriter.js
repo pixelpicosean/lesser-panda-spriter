@@ -1,34 +1,15 @@
 /**
- * Copyright (c) Flyover Games, LLC
+ * Spriter plugin for LesserPanda
+ * @version 0.0.1
+ * @author Sean Bohan (pixelpicosean@gmail.com)
  *
- * Jason Andersen jgandersen@gmail.com
- * Isaac Burns isaacburns@gmail.com
- *
- * Permission is hereby granted, free of charge, to any person
- * obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software
- * without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to
- * whom the Software is furnished to do so, subject to the
- * following conditions:
- *
- * The above copyright notice and this permission notice shall
- * be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
- * KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
- * PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * Based on Spriter.js by:
+ * - Jason Andersen jgandersen@gmail.com
+ * - Isaac Burns isaacburns@gmail.com
  */
 
 /**
- * A JavaScript API for the Spriter SCML animation data format.
+ * A JavaScript API for the Spriter SCON animation data format.
  */
 window.spriter = window.spriter || {};
 
@@ -1302,7 +1283,7 @@ spriter.MainlineKeyframe.prototype.load = function (json)
 {
     var mainline_keyframe = this;
 
-    spriter.Keyframe.call(this, 'load', json)
+    spriter.Keyframe.prototype.load.call(this, json)
 
     // combine bones and bone_refs into one array and sort by id
     mainline_keyframe.bone_array = [];
@@ -1441,7 +1422,7 @@ spriter.BoneTimelineKeyframe.prototype.bone = null;
  */
 spriter.BoneTimelineKeyframe.prototype.load = function (json)
 {
-    spriter.TimelineKeyframe.call(this, 'load', json);
+    spriter.TimelineKeyframe.prototype.load.call(this, json);
     this.bone = new spriter.Bone().load(json.bone || {});
     return this;
 }
@@ -1467,7 +1448,7 @@ spriter.ObjectTimelineKeyframe.prototype.object = null;
  */
 spriter.ObjectTimelineKeyframe.prototype.load = function (json)
 {
-    spriter.ObjectTimelineKeyframe.call(this, 'load', json);
+    spriter.TimelineKeyframe.prototype.load.call(this, json);
     this.object = new spriter.Object().load(json.object || {});
     return this;
 }

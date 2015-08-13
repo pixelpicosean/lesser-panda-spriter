@@ -1456,8 +1456,9 @@ spriter.ObjectTimelineKeyframe.prototype.load = function (json)
 /**
  * @constructor
  */
-spriter.Timeline = function ()
+spriter.Timeline = function (animation)
 {
+    this.animation = animation;
 }
 
 /** @type {number} */
@@ -1476,7 +1477,7 @@ spriter.Timeline.prototype.keyframe_array = null;
  * @return {spriter.Timeline}
  * @param {Object.<string,?>} json
  */
-spriter.Timeline.prototype.load = function (json)
+spriter.Timeline.prototype.load = function (data, json)
 {
     var timeline = this;
 
@@ -1494,6 +1495,15 @@ spriter.Timeline.prototype.load = function (json)
         {
             timeline.keyframe_array.push(new spriter.ObjectTimelineKeyframe().load(key_json));
         });
+        var sprites = this.animation.entity.sprites;
+        var sprite = sprites[timeline.name];
+        if (!sprite) {
+          sprite = new PIXI.Sprite(getTextureForObject(data, timeline.keyframe_array[0].object));
+          sprite.anchor.set(0.5, 0.5);
+          sprite.name = timeline.name;
+          sprites[timeline.name] = sprite;
+          // console.log('create sprite for timeline: %s', timeline.name);
+        }
         break;
     case 'bone':
         json.key.forEach(function (key_json)
@@ -1518,8 +1528,9 @@ spriter.Timeline.prototype.load = function (json)
 /**
  * @constructor
  */
-spriter.Animation = function ()
+spriter.Animation = function (entity)
 {
+    this.entity = entity;
 }
 
 /** @type {number} */
@@ -1545,7 +1556,7 @@ spriter.Animation.prototype.max_time = 0;
  * @return {spriter.Animation}
  * @param {Object.<string,?>} json
  */
-spriter.Animation.prototype.load = function (json)
+spriter.Animation.prototype.load = function (data, json)
 {
     var anim = this;
 
@@ -1562,7 +1573,7 @@ spriter.Animation.prototype.load = function (json)
     json.timeline = spriter.makeArray(json.timeline);
     json.timeline.forEach(function (timeline_json)
     {
-        anim.timeline_array.push(new spriter.Timeline().load(timeline_json));
+        anim.timeline_array.push(new spriter.Timeline(anim).load(data, timeline_json));
     });
 
     anim.min_time = 0;
@@ -1576,6 +1587,11 @@ spriter.Animation.prototype.load = function (json)
  */
 spriter.Entity = function ()
 {
+    /**
+     * Stores all the sprite instances for this entity
+     * @type {PIXI.Sprite}
+     */
+    this.sprites = {};
 }
 
 /** @type {number} */
@@ -1591,7 +1607,7 @@ spriter.Entity.prototype.animation_keys = null;
  * @return {spriter.Entity}
  * @param {Object.<string,?>} json
  */
-spriter.Entity.prototype.load = function (json)
+spriter.Entity.prototype.load = function (data, json)
 {
     var entity = this;
 
@@ -1603,7 +1619,7 @@ spriter.Entity.prototype.load = function (json)
     json.animation = spriter.makeArray(json.animation);
     json.animation.forEach(function (animation_json)
     {
-        var animation = new spriter.Animation().load(animation_json);
+        var animation = new spriter.Animation(entity).load(data, animation_json);
         entity.animation_map[animation.name] = animation;
         entity.animation_keys.push(animation.name);
     });
@@ -1652,7 +1668,7 @@ spriter.Data.prototype.load = function (json)
     json.spriter_data.entity = spriter.makeArray(json.entity);
     json.spriter_data.entity.forEach(function (entity_json)
     {
-        var entity = new spriter.Entity().load(entity_json);
+        var entity = new spriter.Entity().load(data, entity_json);
         data.entity_map[entity.name] = entity;
         data.entity_keys.push(entity.name);
     });
@@ -1756,9 +1772,17 @@ spriter.Data.prototype.getAnimKeys = function (entity_key)
 spriter.Pose = function (data)
 {
     this.data = data || null;
+    // Assign self as property of entities
+    for (var e in data.entity_map) {
+        data.entity_map[e].pose = this;
+    }
+    this.entities = data.entity_map;
 
     this.bone_array = [];
     this.object_array = [];
+
+    this.container = new PIXI.Container();
+    this.container.scale.y = -1;
 }
 
 /** @type {spriter.Data} */
@@ -2069,7 +2093,9 @@ spriter.Pose.prototype.strike = function ()
         // clamp output object array
         pose_object_array.length = data_object_array.length;
 
-        pose_object_array.forEach(function (object)
+        this.container.removeChildren();
+
+        pose_object_array.forEach(function (object, idx)
         {
             var bone = pose_bone_array[object.parent_index];
             if (bone)
@@ -2085,8 +2111,29 @@ spriter.Pose.prototype.strike = function ()
             {
                 object.world_space.copy(object.local_space);
             }
+
+            // TODO: update object transform
+            var timeline_index = data_object_array[idx].timeline_index;
+            var timeline = timeline_array[timeline_index];
+
+            var sprites = pose.entities[pose.entity_key].sprites;
+            var sprite = sprites[timeline.name];
+            // Apply transform
+            var model = object.world_space;
+            sprite.position.set(model.position.x, model.position.y);
+            sprite.rotation = model.rotation.rad;
+            sprite.scale.set(model.scale.x, -model.scale.y);
+            sprite.alpha = object.alpha;
+
+            pose.container.addChild(sprite);
         });
     }
+}
+
+function getTextureForObject(data, object) {
+  var folder = data.folder_array[object.folder_index];
+  var file = folder.file_array[object.file_index];
+  return PIXI.utils.TextureCache[file.name];
 }
 
 /**

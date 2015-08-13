@@ -14,6 +14,10 @@
     var renderDebugData = false;
     var renderDebugPose = false;
 
+    var animTime = 0;
+    var animRate = 1;
+    var animRepeat = 2;
+
     var data = new spriter.Data();
     var pose = new spriter.Pose(data);
 
@@ -54,11 +58,59 @@
       });
       var stage = new PIXI.Container();
 
-      function render() {
-        requestAnimationFrame(render);
+      var animation = new PIXI.Container();
+      animation.scale.y = -1;
+      animation.position.set(300, 300);
+      animation.sprites = {};
+      stage.addChild(animation);
+
+      var prevTime = 0;
+      function render(time) {
+        // Delta time
+        var dt = time - (prevTime || time);
+        prevTime = time;
+
+        // Update animation
+        animTime += dt * animRate;
+
+        var anim = pose.curAnim();
+        if (anim && (animTime >= anim.length * animRepeat)) {
+          var animKeys = pose.getAnimKeys();
+          var animKey = animKeys[(animKeys.indexOf(pose.getAnim()) + 1) % animKeys.length];
+          pose.setAnim(animKey);
+          pose.setTime(0);
+          animTime = 0;
+        }
+
+        pose.strike();
+
+        pose.object_array.forEach(function(obj) {
+          var folder = data.folder_array[obj.folder_index];
+          var file = folder.file_array[obj.file_index];
+          var spriteName = file.name;
+
+          var sprite = animation.sprites[spriteName];
+          if (!sprite) {
+            sprite = new PIXI.Sprite.fromFrame(spriteName);
+            sprite.anchor.set(0.5, 0.5);
+            animation.addChild(sprite);
+            animation.sprites[spriteName] = sprite;
+          }
+
+          // Apply transform
+          var model = obj.world_space;
+          sprite.position.set(model.position.x, model.position.y);
+          sprite.rotation = model.rotation.rad;
+          sprite.scale.set(model.scale.x, -model.scale.y);
+          sprite.alpha = obj.alpha;
+        });
 
         renderer.render(stage);
+
+        requestAnimationFrame(render);
       }
+
+      requestAnimationFrame(render);
     }
   </script>
 </body>

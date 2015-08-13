@@ -8,6 +8,8 @@
   <script src="pixi.js"></script>
   <script src="spriter.js"></script>
 
+  <canvas id="canvas"></canvas>
+
   <script>
     var renderDebugData = false;
     var renderDebugPose = false;
@@ -15,39 +17,49 @@
     var data = new spriter.Data();
     var pose = new spriter.Pose(data);
 
+    function sconMiddleWare(res, next) {
+      if (res.url.match(/\.scon$/)) {
+          // console.log('%s is scon', res.url);
+          var path = res.url.replace(/[^\/]*$/, '');
+          var atlasUrl = res.url.replace(/\.scon$/, '.json');
+          // console.log(atlasUrl);
+          PIXI.loader.add(atlasUrl);
+          loadScon(res.data);
+        }
+        next();
+    }
+
     function loadScon(sconStr) {
       var scon = JSON.parse(sconStr);
-      console.log(scon);
       // Load scon data
       data.load(scon);
-      console.log(scon);
 
       // Set entity and animation
-      // var entityKeys = pose.getEntityKeys();
-      // pose.setEntity(entityKeys[0]);
+      var entityKeys = pose.getEntityKeys();
+      pose.setEntity(entityKeys[0]);
 
-      // var animKeys = pose.getAnimKeys();
-      // pose.setAnim(animKeys[0]);
-
-      // Load textures
-      // data.folder_array.forEach(function(folder) {
-      //   folder.file_array.forEach(function(file) {
-      //     var imageKey = file.name;
-      //     console.log('load image: %s', imageKey);
-      //   });
-      // });
+      var animKeys = pose.getAnimKeys();
+      pose.setAnim(animKeys[0]);
     }
 
     PIXI.loader
       .add('GreyGuy/player.scon')
-      .after(function(res, next) {
-        loadScon(res.data);
-        next();
-      })
-      .once('complete', function() {
-        console.log('load scon complete');
-      })
+      .after(sconMiddleWare)
+      .once('complete', start)
       .load();
+
+    function start() {
+      var renderer = PIXI.autoDetectRenderer(600, 400, {
+        view: document.querySelector('#canvas')
+      });
+      var stage = new PIXI.Container();
+
+      function render() {
+        requestAnimationFrame(render);
+
+        renderer.render(stage);
+      }
+    }
   </script>
 </body>
 </html>

@@ -23,15 +23,26 @@
       });
       var stage = new PIXI.Container();
 
-      // Create and init a spriter object
-      var greyGuy = new spriter.SpriterAnimation('player.scon', 'Player');
-      greyGuy.position.set(300, 300);
-      stage.addChild(greyGuy);
+      // Create and init spriter objects
+      // var NUM_X = 20;
+      // var NUM_Y = 8;
+      var NUM_X = 16;
+      var NUM_Y = 8;
 
-      greyGuy.play('idle');
-      setTimeout(function() {
-        greyGuy.play('walk', true);
-      }, 2000);
+      var i, j;
+      var obj, objects = [];
+      for (i = 0; i < NUM_X; i++) {
+        for (j = 0; j < NUM_Y; j++) {
+          obj = new spriter.SpriterAnimation('player.scon', 'Player');
+          obj.play('walk');
+          obj.setTime(i * 40);
+          obj.scale.set(0.2, -0.2);
+          obj.position.set(i * 30 + 10, 50 + j * 50);
+          stage.addChild(obj);
+
+          objects.push(obj);
+        }
+      }
 
       var prevTime = 0;
       function render(time) {
@@ -42,7 +53,9 @@
         prevTime = time;
 
         // Update animation
-        greyGuy.update(dt);
+        for (i = 0; i < NUM_X * NUM_Y; i++) {
+          objects[i].update(dt);
+        }
 
         renderer.render(stage);
       }

@@ -1083,7 +1083,7 @@
   /**
    * @constructor
    */
-  function Timeline(animation) {
+  function Timeline() {
     /** @type {number} */
     this.id = -1;
     /** @type {string} */
@@ -1136,6 +1136,22 @@
     return this;
   }
 
+  function EventlineKeyframe(json) {
+    this.id = loadInt(json, 'id', -1);
+    this.time = loadInt(json, 'time', 0);
+  }
+
+  function Eventline(json) {
+    this.id = loadInt(json, 'id', -1);
+    this.name = loadString(json, 'name', '');
+    this.keys = [];
+
+    for (var i = 0, len = json.key.length; i < len; i++) {
+      this.keys.push(new EventlineKeyframe(json.key[i]));
+    }
+    this.keys - this.keys.sort(Keyframe.compare);
+  }
+
   /**
    * @constructor
    */
@@ -1154,6 +1170,11 @@
     this.mainline = null;
     /** @type {Array.<Timeline>} */
     this.timelines = null;
+    /**
+     * @type {Array.<Eventline>}
+     * @optional
+     */
+    this.eventlines = null;
     /** @type {number} */
     this.minTime = 0;
     /** @type {number} */
@@ -1174,10 +1195,19 @@
     json.mainline = json.mainline || {};
     this.mainline = new Mainline().load(data, json.mainline);
 
+    var i, len;
+
     this.timelines = [];
     json.timeline = makeArray(json.timeline);
-    for (var i = 0, len = json.timeline.length; i < len; i++) {
+    for (i = 0, len = json.timeline.length; i < len; i++) {
       this.timelines.push(new Timeline().load(data, json.timeline[i]));
+    }
+
+    if (json.eventline) {
+      this.eventlines = [];
+      for (i = 0, len = json.eventline.length; i < len; i++) {
+        this.eventlines.push(new Eventline(json.eventline[i]));
+      }
     }
 
     this.minTime = 0;

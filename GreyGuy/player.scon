@@ -7857,6 +7857,18 @@
 					]
 				},
 				{
+					"eventline": [
+						{
+							"id": 0,
+							"key": [
+								{
+									"id": 0,
+									"time": 495
+								}
+							],
+							"name": "showtime"
+						}
+					],
 					"gline": [],
 					"id": 1,
 					"interval": 100,
@@ -28094,6 +28106,6 @@
 		}
 	],
 	"generator": "BrashMonkey Spriter",
-	"generator_version": "r3",
+	"generator_version": "r4.1",
 	"scon_version": "1.0"
 }

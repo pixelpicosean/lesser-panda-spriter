@@ -1328,9 +1328,10 @@
     }
   };
   spriter.SpriterAnimation.prototype.update = function(elapsed) {
+    // Update timer
     this.setTime(this.getTime() + elapsed);
-  };
-  spriter.SpriterAnimation.prototype.strike = function() {
+
+    // Update body parts
     if (!this.dirty) {
       return;
     }
@@ -1343,6 +1344,7 @@
     this.elapsedTime = 0; // reset for next update
 
     var sprAnim = this;
+    var i, len;
 
     if (anim) {
       var mainline_keyframe_array = anim.mainline.keyframes;
@@ -1444,11 +1446,17 @@
         }
       });
 
-      // clamp output object array
+      // Clamp output object array
       pose_object_array.length = data_object_array.length;
 
-      this.removeChildren();
+      // Remove children, add them back later to ensure the
+      // correct z-index
+      for (i = 0, len = this.children.length; i < len; i++) {
+        this.children[i].parent = null;
+      }
+      this.children.length = 0;
 
+      // Update transform of objects
       pose_object_array.forEach(function(object, idx) {
         var bone = pose_bone_array[object.parentID];
         if (bone) {
@@ -1475,7 +1483,8 @@
         sprite.scale.set(model.scale.x, -model.scale.y);
         sprite.alpha = object.alpha;
 
-        sprAnim.addChild(sprite);
+        sprite.parent = sprAnim;
+        sprAnim.children.push(sprite);
       });
     }
   };

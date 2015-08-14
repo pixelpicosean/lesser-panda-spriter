@@ -1243,7 +1243,7 @@
   /**
    * @constructor
    */
-  spriter.SprAnimation = function(sconKey, entityName) {
+  spriter.SpriterAnimation = function(sconKey, entityName) {
     PIXI.Container.call(this);
     this.scale.y = -1; // FIXME: inverse the transform instead of set y scale
 
@@ -1327,20 +1327,20 @@
     }
   }
 
-  spriter.SprAnimation.prototype = Object.create(PIXI.Container.prototype);
-  spriter.SprAnimation.prototype.constructor = spriter.SprAnimation;
+  spriter.SpriterAnimation.prototype = Object.create(PIXI.Container.prototype);
+  spriter.SpriterAnimation.prototype.constructor = spriter.SpriterAnimation;
 
-  spriter.SprAnimation.prototype.play = function(anim, loop) {
+  spriter.SpriterAnimation.prototype.play = function(anim, loop) {
     console.log((loop ? 'loop' : 'play') + ': %s', anim);
     this.setAnim(anim);
   };
-  spriter.SprAnimation.prototype.currAnim = function() {
+  spriter.SpriterAnimation.prototype.currAnim = function() {
     return this.animation_map[this.anim_key];
   };
-  spriter.SprAnimation.prototype.getAnim = function() {
+  spriter.SpriterAnimation.prototype.getAnim = function() {
     return this.anim_key;
   };
-  spriter.SprAnimation.prototype.setAnim = function(anim_key) {
+  spriter.SpriterAnimation.prototype.setAnim = function(anim_key) {
     if (this.anim_key !== anim_key) {
       this.anim_key = anim_key;
       var anim = this.currAnim();
@@ -1351,10 +1351,10 @@
       this.dirty = true;
     }
   };
-  spriter.SprAnimation.prototype.getTime = function() {
+  spriter.SpriterAnimation.prototype.getTime = function() {
     return this.time;
   };
-  spriter.SprAnimation.prototype.setTime = function(time) {
+  spriter.SpriterAnimation.prototype.setTime = function(time) {
     var anim = this.currAnim();
     if (anim) {
       time = wrap(time, anim.min_time, anim.max_time);
@@ -1366,10 +1366,10 @@
       this.dirty = true;
     }
   };
-  spriter.SprAnimation.prototype.update = function(elapsed) {
+  spriter.SpriterAnimation.prototype.update = function(elapsed) {
     this.setTime(this.getTime() + elapsed);
   };
-  spriter.SprAnimation.prototype.strike = function() {
+  spriter.SpriterAnimation.prototype.strike = function() {
     if (!this.dirty) {
       return;
     }
@@ -1579,7 +1579,7 @@
     // data.entity_keys = [];
     // json.spriter_data.entity = makeArray(json.entity);
     // json.spriter_data.entity.forEach(function(entity_json) {
-    //   var entity = new spriter.SprAnimation().load(data, entity_json);
+    //   var entity = new spriter.SpriterAnimation().load(data, entity_json);
     //   data.entity_map[entity.name] = entity;
     //   data.entity_keys.push(entity.name);
     // });
@@ -1621,7 +1621,7 @@
   }
 
   /**
-   * @return {Object.<string, spriter.SprAnimation>}
+   * @return {Object.<string, spriter.SpriterAnimation>}
    */
   spriter.Data.prototype.getEntities = function() {
     return this.entity_map;
@@ -1692,7 +1692,7 @@
   }
 
   /**
-   * @return {Object.<string, spriter.SprAnimation>}
+   * @return {Object.<string, spriter.SpriterAnimation>}
    */
   spriter.Pose.prototype.getEntities = function() {
     if (this.data) {
@@ -1712,7 +1712,7 @@
   }
 
   /**
-   * @return {spriter.SprAnimation}
+   * @return {spriter.SpriterAnimation}
    */
   spriter.Pose.prototype.curEntity = function() {
     var entity_map = this.data.entity_map;

@@ -24,11 +24,14 @@
       var stage = new PIXI.Container();
 
       // Create and init a spriter object
-      var greyGuy = new spriter.SprAnimation('player.scon', 'Player');
+      var greyGuy = new spriter.SpriterAnimation('player.scon', 'Player');
       greyGuy.position.set(300, 300);
       stage.addChild(greyGuy);
 
       greyGuy.play('idle', true);
+      setTimeout(function() {
+        greyGuy.play('walk', true);
+      }, 2000);
 
       var prevTime = 0;
       function render(time) {

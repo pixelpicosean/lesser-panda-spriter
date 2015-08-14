@@ -1084,8 +1084,6 @@
    * @constructor
    */
   function Timeline(animation) {
-    this.animation = animation;
-
     /** @type {number} */
     this.id = -1;
     /** @type {string} */
@@ -1118,14 +1116,6 @@
         for (i = 0, len = json.key.length; i < len; i++) {
           this.keyframes.push(new ObjectTimelineKeyframe().load(data, json.key[i]));
         }
-        var sprites = this.animation.entity.sprites;
-        var sprite = sprites[this.name];
-        if (!sprite) {
-          sprite = new PIXI.Sprite(getTextureForObject(data, this.keyframes[0].object));
-          sprite.anchor.set(0.5, 0.5);
-          sprite.name = this.name;
-          sprites[this.name] = sprite;
-        }
         break;
       case 'bone':
         for (i = 0, len = json.key.length; i < len; i++) {
@@ -1149,8 +1139,7 @@
   /**
    * @constructor
    */
-  function Animation(entity) {
-    this.entity = entity;
+  function Animation() {
     /** @type {number} */
     this.id = -1;
     /** @type {string} */
@@ -1188,13 +1177,31 @@
     this.timelines = [];
     json.timeline = makeArray(json.timeline);
     for (var i = 0, len = json.timeline.length; i < len; i++) {
-      this.timelines.push(new Timeline(this).load(data, json.timeline[i]));
+      this.timelines.push(new Timeline().load(data, json.timeline[i]));
     }
 
     this.minTime = 0;
     this.maxTime = this.length;
 
     return this;
+  }
+
+  function Entity(data, json) {
+    /** @type {Number} */
+    this.id = loadInt(json, 'id', -1);
+    /** @type {String} */
+    this.name = loadString(json, 'name', '');
+    /** @type {Object.<string,Animation>} */
+    this.anims = {};
+    /** @type {Array.<string>} */
+    this.animNames = [];
+
+    // Create animations
+    for (var i = 0, len = json.animation.length; i < len; i++) {
+      var animation = new Animation().load(data, json.animation[i]);
+      this.anims[animation.name] = animation;
+      this.animNames.push(animation.name);
+    }
   }
 
   /**
@@ -1207,19 +1214,10 @@
     PIXI.Container.call(this);
     this.scale.y = -1; // FIXME: inverse the transform instead of set y scale
 
-    var data = spriter.getData(sconKey);
-    var entityDef = data.getEntityData(entityName);
-
-    /** @type {Object} definitation data */
-    this.data = data;
-    /** @type {number} */
-    this.id = loadInt(entityDef, 'id', -1);
-    /** @type {string} */
-    this.name = loadString(entityDef, 'name', '');
-    /** @type {Object.<string,Animation>} */
-    this.anims = {};
-    /** @type {Array.<string>} */
-    this.animNames = [];
+    /** @type {Data} */
+    this.data = spriter.getData(sconKey);
+    /** @type {Entity} */
+    this.entity = this.data.getEntity(entityName);
 
     /** @type {Array.<Bone>} */
     this.bones = [];
@@ -1246,13 +1244,6 @@
      * @private
      */
     this.sprites = {};
-
-    // Create animations
-    for (var i = 0, len = entityDef.animation.length; i < len; i++) {
-      var animation = new Animation(this).load(data, entityDef.animation[i]);
-      this.anims[animation.name] = animation;
-      this.animNames.push(animation.name);
-    }
   }
 
   SpriterAnimation.prototype = Object.create(PIXI.Container.prototype);
@@ -1281,7 +1272,7 @@
    * @return {Animation}
    */
   SpriterAnimation.prototype.currAnim = function() {
-    return this.anims[this.currAnimName];
+    return this.entity.anims[this.currAnimName];
   };
   /**
    * Set time of current animation
@@ -1468,6 +1459,12 @@
 
         var sprites = sprAnim.sprites;
         var sprite = sprites[timeline.name];
+        if (!sprite) {
+          sprite = new PIXI.Sprite(getTextureForObject(sprAnim.data, timeline.keyframes[0].object));
+          sprite.anchor.set(0.5, 0.5);
+          sprite.name = timeline.name;
+          sprites[timeline.name] = sprite;
+        }
         // Apply transform
         var model = object.worldSpace;
         sprite.position.set(model.position.x, model.position.y);
@@ -1495,8 +1492,8 @@
     /** @type {Array.<Folder>} */
     this.folder_array = [];
 
-    /** @type {Object} entityName -> entityData map */
-    this.entityDataMap = {};
+    /** @type {Object} entityName -> entity map */
+    this.entityMap = {};
     /** @type {Array.<String>} entity definiation names */
     this.entityNames = [];
 
@@ -1514,12 +1511,14 @@
     }
 
     // Construct entity data map
-    var entity;
+    var entityDef, entity;
     for (i = 0, len = scon.entity.length; i < len; i++) {
-      entity = scon.entity[i];
-      this.entityDataMap[entity.name] = entity;
-      this.entityNames.push(entity.name);
+      entityDef = scon.entity[i];
+      entity = new Entity(this, entityDef);
+      this.entityMap[entityDef.name] = entity;
+      this.entityNames.push(entityDef.name);
     }
+    console.log(this.entityMap);
   }
 
   Data.prototype.getFile = function(folderIdx, fileIdx) {
@@ -1527,12 +1526,12 @@
   };
 
   /**
-   * Get entity data
+   * Get entity object
    * @param  {String} entityName Name of the entity
-   * @return {Object}            Defination data object
+   * @return {Entity}
    */
-  Data.prototype.getEntityData = function(entityName) {
-    return this.entityDataMap[entityName];
+  Data.prototype.getEntity = function(entityName) {
+    return this.entityMap[entityName];
   };
 
   /**

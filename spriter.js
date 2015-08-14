@@ -19,7 +19,7 @@
    */
   var scons = {};
 
-  spriter.loaderMiddleWare = function(res, next) {
+  function loaderMiddleWare(res, next) {
     if (res.url.match(/\.scon$/)) {
       // console.log('%s is scon', res.url);
       var path = res.url.replace(/[^\/]*$/, '');
@@ -28,7 +28,7 @@
       PIXI.loader.add(atlasUrl);
 
       var scon = JSON.parse(res.data);
-      scons[res.name] = new spriter.Data(scon);
+      scons[res.name] = new Data(scon);
     }
     next();
   };
@@ -36,9 +36,9 @@
   /**
    * Get the data object of a specific scon file asset key
    * @param  {String} sconKey Key of the scon file
-   * @return {spriter.Data}   Data object created for the scon file
+   * @return {Data}   Data object created for the scon file
    */
-  spriter.getData = function(sconKey) {
+  function getData(sconKey) {
     return scons[sconKey];
   };
 
@@ -46,114 +46,114 @@
    * @constructor
    * @param {number=} rad
    */
-  spriter.Angle = function(rad) {
+  function Angle(rad) {
     this.rad = rad || 0;
   }
 
-  Object.defineProperty(spriter.Angle.prototype, 'deg', {
-    /** @this {spriter.Angle} */
+  Object.defineProperty(Angle.prototype, 'deg', {
+    /** @this {Angle} */
     get: function() {
       return this.rad * 180 / Math.PI;
     },
-    /** @this {spriter.Angle} */
+    /** @this {Angle} */
     set: function(value) {
       this.rad = value * Math.PI / 180;
     }
   });
 
-  Object.defineProperty(spriter.Angle.prototype, 'cos', {
-    /** @this {spriter.Angle} */
+  Object.defineProperty(Angle.prototype, 'cos', {
+    /** @this {Angle} */
     get: function() {
       return Math.cos(this.rad);
     }
   });
 
-  Object.defineProperty(spriter.Angle.prototype, 'sin', {
-    /** @this {spriter.Angle} */
+  Object.defineProperty(Angle.prototype, 'sin', {
+    /** @this {Angle} */
     get: function() {
       return Math.sin(this.rad);
     }
   });
 
   /**
-   * @return {spriter.Angle}
+   * @return {Angle}
    */
-  spriter.Angle.prototype.selfIdentity = function() {
+  Angle.prototype.selfIdentity = function() {
     this.rad = 0;
     return this;
   }
 
   /**
-   * @return {spriter.Angle}
-   * @param {spriter.Angle} other
+   * @return {Angle}
+   * @param {Angle} other
    */
-  spriter.Angle.prototype.copy = function(other) {
+  Angle.prototype.copy = function(other) {
     this.rad = other.rad;
     return this;
   }
 
   /**
-   * @return {spriter.Angle}
-   * @param {spriter.Angle} a
-   * @param {spriter.Angle} b
-   * @param {spriter.Angle=} out
+   * @return {Angle}
+   * @param {Angle} a
+   * @param {Angle} b
+   * @param {Angle=} out
    */
-  spriter.Angle.add = function(a, b, out) {
-    out = out || new spriter.Angle();
+  Angle.add = function(a, b, out) {
+    out = out || new Angle();
     out.rad = spine.wrapAngleRadians(a.rad + b.rad);
     return out;
   }
 
   /**
-   * @return {spriter.Angle}
-   * @param {spriter.Angle} other
-   * @param {spriter.Angle=} out
+   * @return {Angle}
+   * @param {Angle} other
+   * @param {Angle=} out
    */
-  spriter.Angle.prototype.add = function(other, out) {
-    return spriter.Angle.add(this, other, out);
+  Angle.prototype.add = function(other, out) {
+    return Angle.add(this, other, out);
   }
 
   /**
-   * @return {spriter.Angle}
-   * @param {spriter.Angle} other
+   * @return {Angle}
+   * @param {Angle} other
    */
-  spriter.Angle.prototype.selfAdd = function(other) {
-    return spriter.Angle.add(this, other, this);
+  Angle.prototype.selfAdd = function(other) {
+    return Angle.add(this, other, this);
   }
 
   /**
-   * @return {spriter.Angle}
-   * @param {spriter.Angle} a
-   * @param {spriter.Angle} b
+   * @return {Angle}
+   * @param {Angle} a
+   * @param {Angle} b
    * @param {number} pct
    * @param {number} spin
-   * @param {spriter.Angle=} out
+   * @param {Angle=} out
    */
-  spriter.Angle.tween = function(a, b, pct, spin, out) {
-    out = out || new spriter.Angle();
+  Angle.tween = function(a, b, pct, spin, out) {
+    out = out || new Angle();
     out.rad = tweenAngleRadians(a.rad, b.rad, pct, spin);
     return out;
   }
 
   /**
-   * @return {spriter.Angle}
-   * @param {spriter.Angle} other
+   * @return {Angle}
+   * @param {Angle} other
    * @param {number} pct
    * @param {number} spin
-   * @param {spriter.Angle=} out
+   * @param {Angle=} out
    */
-  spriter.Angle.prototype.tween = function(other, pct, spin, out) {
-    return spriter.Angle.tween(this, other, pct, spin, out);
+  Angle.prototype.tween = function(other, pct, spin, out) {
+    return Angle.tween(this, other, pct, spin, out);
   }
 
   /**
-   * @return {spriter.Angle}
-   * @param {spriter.Angle} other
+   * @return {Angle}
+   * @param {Angle} other
    * @param {number} pct
    * @param {number} spin
    */
-  spriter.Angle.prototype.selfTween = function(other, pct, spin) {
-    return spriter.Angle.tween(this, other, pct, spin, this);
+  Angle.prototype.selfTween = function(other, pct, spin) {
+    return Angle.tween(this, other, pct, spin, this);
   }
 
   /**
@@ -161,102 +161,102 @@
    * @param {number=} x
    * @param {number=} y
    */
-  spriter.Vector = function(x, y) {
+  function Vector(x, y) {
     this.x = x || 0;
     this.y = y || 0;
   }
 
   /**
-   * @return {spriter.Vector}
-   * @param {spriter.Vector} other
+   * @return {Vector}
+   * @param {Vector} other
    */
-  spriter.Vector.prototype.copy = function(other) {
+  Vector.prototype.copy = function(other) {
     this.x = other.x;
     this.y = other.y;
     return this;
   }
 
   /**
-   * @return {spriter.Vector}
-   * @param {spriter.Vector} a
-   * @param {spriter.Vector} b
-   * @param {spriter.Vector=} out
+   * @return {Vector}
+   * @param {Vector} a
+   * @param {Vector} b
+   * @param {Vector=} out
    */
-  spriter.Vector.add = function(a, b, out) {
-    out = out || new spriter.Vector();
+  Vector.add = function(a, b, out) {
+    out = out || new Vector();
     out.x = a.x + b.x;
     out.y = a.y + b.y;
     return out;
   }
 
   /**
-   * @return {spriter.Vector}
-   * @param {spriter.Vector} other
-   * @param {spriter.Vector=} out
+   * @return {Vector}
+   * @param {Vector} other
+   * @param {Vector=} out
    */
-  spriter.Vector.prototype.add = function(other, out) {
-    return spriter.Vector.add(this, other, out);
+  Vector.prototype.add = function(other, out) {
+    return Vector.add(this, other, out);
   }
 
   /**
-   * @return {spriter.Vector}
-   * @param {spriter.Vector} other
+   * @return {Vector}
+   * @param {Vector} other
    */
-  spriter.Vector.prototype.selfAdd = function(other) {
-    //return spriter.Vector.add(this, other, this);
+  Vector.prototype.selfAdd = function(other) {
+    //return Vector.add(this, other, this);
     this.x += other.x;
     this.y += other.y;
     return this;
   }
 
   /**
-   * @return {spriter.Vector}
-   * @param {spriter.Vector} a
-   * @param {spriter.Vector} b
+   * @return {Vector}
+   * @param {Vector} a
+   * @param {Vector} b
    * @param {number} pct
-   * @param {spriter.Vector=} out
+   * @param {Vector=} out
    */
-  spriter.Vector.tween = function(a, b, pct, out) {
-    out = out || new spriter.Vector();
+  Vector.tween = function(a, b, pct, out) {
+    out = out || new Vector();
     out.x = tween(a.x, b.x, pct);
     out.y = tween(a.y, b.y, pct);
     return out;
   }
 
   /**
-   * @return {spriter.Vector}
-   * @param {spriter.Vector} other
+   * @return {Vector}
+   * @param {Vector} other
    * @param {number} pct
-   * @param {spriter.Vector=} out
+   * @param {Vector=} out
    */
-  spriter.Vector.prototype.tween = function(other, pct, out) {
-    return spriter.Vector.tween(this, other, pct, out);
+  Vector.prototype.tween = function(other, pct, out) {
+    return Vector.tween(this, other, pct, out);
   }
 
   /**
-   * @return {spriter.Vector}
-   * @param {spriter.Vector} other
+   * @return {Vector}
+   * @param {Vector} other
    * @param {number} pct
    */
-  spriter.Vector.prototype.selfTween = function(other, pct) {
-    return spriter.Vector.tween(this, other, pct, this);
+  Vector.prototype.selfTween = function(other, pct) {
+    return Vector.tween(this, other, pct, this);
   }
 
   /**
    * @constructor
-   * @extends {spriter.Vector}
+   * @extends {Vector}
    */
-  spriter.Scale = function() {
-    spriter.Vector.call(this, 1, 1);
+  function Scale() {
+    Vector.call(this, 1, 1);
   }
 
-  spriter.Scale.prototype = Object.create(spriter.Vector.prototype);
-  spriter.Scale.constructor = spriter.Scale;
+  Scale.prototype = Object.create(Vector.prototype);
+  Scale.prototype.constructor = Scale;
 
   /**
-   * @return {spriter.Scale}
+   * @return {Scale}
    */
-  spriter.Scale.prototype.selfIdentity = function() {
+  Scale.prototype.selfIdentity = function() {
     this.x = 1;
     this.y = 1;
     return this;
@@ -264,19 +264,19 @@
 
   /**
    * @constructor
-   * @extends {spriter.Vector}
+   * @extends {Vector}
    */
-  spriter.Pivot = function() {
-    spriter.Vector.call(this, 0, 1);
+  function Pivot() {
+    Vector.call(this, 0, 1);
   }
 
-  spriter.Pivot.prototype = Object.create(spriter.Vector.prototype);
-  spriter.Pivot.constructor = spriter.Pivot;
+  Pivot.prototype = Object.create(Vector.prototype);
+  Pivot.prototype.constructor = Pivot;
 
   /**
-   * @return {spriter.Pivot}
+   * @return {Pivot}
    */
-  spriter.Pivot.prototype.selfIdentity = function() {
+  Pivot.prototype.selfIdentity = function() {
     this.x = 0;
     this.y = 1;
     return this;
@@ -285,17 +285,17 @@
   /**
    * @constructor
    */
-  spriter.Transform = function() {
-    this.position = new spriter.Vector();
-    this.rotation = new spriter.Angle();
-    this.scale = new spriter.Scale();
+  function Transform() {
+    this.position = new Vector();
+    this.rotation = new Angle();
+    this.scale = new Scale();
   }
 
   /**
-   * @return {spriter.Transform}
-   * @param {spriter.Transform} other
+   * @return {Transform}
+   * @param {Transform} other
    */
-  spriter.Transform.prototype.copy = function(other) {
+  Transform.prototype.copy = function(other) {
     this.position.copy(other.position);
     this.rotation.copy(other.rotation);
     this.scale.copy(other.scale);
@@ -303,10 +303,10 @@
   }
 
   /**
-   * @return {spriter.Transform}
+   * @return {Transform}
    * @param {Object.<string,?>} json
    */
-  spriter.Transform.prototype.load = function(json) {
+  Transform.prototype.load = function(json) {
     this.position.x = loadFloat(json, 'x', 0);
     this.position.y = loadFloat(json, 'y', 0);
     this.rotation.deg = loadFloat(json, 'angle', 0);
@@ -317,11 +317,11 @@
 
   /**
    * @return {boolean}
-   * @param {spriter.Transform} a
-   * @param {spriter.Transform} b
+   * @param {Transform} a
+   * @param {Transform} b
    * @param {number=} epsilon
    */
-  spriter.Transform.equal = function(a, b, epsilon) {
+  Transform.equal = function(a, b, epsilon) {
     epsilon = epsilon || 1e-6;
     if (Math.abs(a.position.x - b.position.x) > epsilon) {
       return false;
@@ -342,11 +342,11 @@
   }
 
   /**
-   * @return {spriter.Transform}
-   * @param {spriter.Transform=} out
+   * @return {Transform}
+   * @param {Transform=} out
    */
-  spriter.Transform.identity = function(out) {
-    out = out || new spriter.Transform();
+  Transform.identity = function(out) {
+    out = out || new Transform();
     out.position.x = 0;
     out.position.y = 0;
     out.rotation.rad = 0;
@@ -356,12 +356,12 @@
   }
 
   /**
-   * @return {spriter.Transform}
-   * @param {spriter.Transform} space
+   * @return {Transform}
+   * @param {Transform} space
    * @param {number} x
    * @param {number} y
    */
-  spriter.Transform.translate = function(space, x, y) {
+  Transform.translate = function(space, x, y) {
     x *= space.scale.x;
     y *= space.scale.y;
     var rad = space.rotation.rad;
@@ -375,39 +375,39 @@
   }
 
   /**
-   * @return {spriter.Transform}
-   * @param {spriter.Transform} space
+   * @return {Transform}
+   * @param {Transform} space
    * @param {number} rad
    */
-  spriter.Transform.rotate = function(space, rad) {
+  Transform.rotate = function(space, rad) {
     space.rotation.rad = wrapAngleRadians(space.rotation.rad + rad);
     return space;
   }
 
   /**
-   * @return {spriter.Transform}
-   * @param {spriter.Transform} space
+   * @return {Transform}
+   * @param {Transform} space
    * @param {number} x
    * @param {number} y
    */
-  spriter.Transform.scale = function(space, x, y) {
+  Transform.scale = function(space, x, y) {
     space.scale.x *= x;
     space.scale.y *= y;
     return space;
   }
 
   /**
-   * @return {spriter.Transform}
-   * @param {spriter.Transform} space
-   * @param {spriter.Transform=} out
+   * @return {Transform}
+   * @param {Transform} space
+   * @param {Transform=} out
    */
-  spriter.Transform.invert = function(space, out) {
+  Transform.invert = function(space, out) {
     // invert
     // out.sca = space.sca.inv();
     // out.rot = space.rot.inv();
     // out.pos = space.pos.neg().rotate(space.rot.inv()).mul(space.sca.inv());
 
-    out = out || new spriter.Transform();
+    out = out || new Transform();
     var inv_scale_x = 1 / space.scale.x;
     var inv_scale_y = 1 / space.scale.y;
     var inv_rotation = -space.rotation.rad;
@@ -429,18 +429,18 @@
   }
 
   /**
-   * @return {spriter.Transform}
-   * @param {spriter.Transform} a
-   * @param {spriter.Transform} b
-   * @param {spriter.Transform=} out
+   * @return {Transform}
+   * @param {Transform} a
+   * @param {Transform} b
+   * @param {Transform=} out
    */
-  spriter.Transform.combine = function(a, b, out) {
+  Transform.combine = function(a, b, out) {
     // combine
     // out.pos = b.pos.mul(a.sca).rotate(a.rot).add(a.pos);
     // out.rot = b.rot.mul(a.rot);
     // out.sca = b.sca.mul(a.sca);
 
-    out = out || new spriter.Transform();
+    out = out || new Transform();
     var x = b.position.x * a.scale.x;
     var y = b.position.y * a.scale.y;
     var rad = a.rotation.rad;
@@ -461,18 +461,18 @@
   }
 
   /**
-   * @return {spriter.Transform}
-   * @param {spriter.Transform} ab
-   * @param {spriter.Transform} a
-   * @param {spriter.Transform=} out
+   * @return {Transform}
+   * @param {Transform} ab
+   * @param {Transform} a
+   * @param {Transform=} out
    */
-  spriter.Transform.extract = function(ab, a, out) {
+  Transform.extract = function(ab, a, out) {
     // extract
     // out.sca = ab.sca.mul(a.sca.inv());
     // out.rot = ab.rot.mul(a.rot.inv());
     // out.pos = ab.pos.add(a.pos.neg()).rotate(a.rot.inv()).mul(a.sca.inv());
 
-    out = out || new spriter.Transform();
+    out = out || new Transform();
     out.scale.x = ab.scale.x / a.scale.x;
     out.scale.y = ab.scale.y / a.scale.y;
     if ((a.scale.x * a.scale.y) < 0) {
@@ -493,13 +493,13 @@
   }
 
   /**
-   * @return {spriter.Vector}
-   * @param {spriter.Transform} space
-   * @param {spriter.Vector} v
-   * @param {spriter.Vector=} out
+   * @return {Vector}
+   * @param {Transform} space
+   * @param {Vector} v
+   * @param {Vector=} out
    */
-  spriter.Transform.transform = function(space, v, out) {
-    out = out || new spriter.Vector();
+  Transform.transform = function(space, v, out) {
+    out = out || new Vector();
     var x = v.x * space.scale.x;
     var y = v.y * space.scale.y;
     var rad = space.rotation.rad;
@@ -513,13 +513,13 @@
   }
 
   /**
-   * @return {spriter.Vector}
-   * @param {spriter.Transform} space
-   * @param {spriter.Vector} v
-   * @param {spriter.Vector=} out
+   * @return {Vector}
+   * @param {Transform} space
+   * @param {Vector} v
+   * @param {Vector=} out
    */
-  spriter.Transform.untransform = function(space, v, out) {
-    out = out || new spriter.Vector();
+  Transform.untransform = function(space, v, out) {
+    out = out || new Vector();
     var x = v.x - space.position.x;
     var y = v.y - space.position.y;
     var rad = -space.rotation.rad;
@@ -533,14 +533,14 @@
   }
 
   /**
-   * @return {spriter.Transform}
-   * @param {spriter.Transform} a
-   * @param {spriter.Transform} b
+   * @return {Transform}
+   * @param {Transform} a
+   * @param {Transform} b
    * @param {number} tween
    * @param {number} spin
-   * @param {spriter.Transform=} out
+   * @param {Transform=} out
    */
-  spriter.Transform.tween = function(a, b, twn, spin, out) {
+  Transform.tween = function(a, b, twn, spin, out) {
     out.position.x = tween(a.position.x, b.position.x, twn);
     out.position.y = tween(a.position.y, b.position.y, twn);
     out.rotation.rad = tweenAngleRadians(a.rotation.rad, b.rotation.rad, twn, spin);
@@ -552,7 +552,7 @@
   /**
    * @constructor
    */
-  spriter.File = function() {
+  function File() {
     /** @type {number} */
     this.id = -1;
     /** @type {string} */
@@ -561,15 +561,15 @@
     this.width = 0;
     /** @type {number} */
     this.height = 0;
-    /** @type {spriter.Pivot} */
-    this.pivot = new spriter.Pivot();
+    /** @type {Pivot} */
+    this.pivot = new Pivot();
   }
 
   /**
-   * @return {spriter.File}
+   * @return {File}
    * @param {Object.<string,?>} json
    */
-  spriter.File.prototype.load = function(json) {
+  File.prototype.load = function(json) {
     this.id = loadInt(json, 'id', -1);
     this.name = loadString(json, 'name', '');
     this.width = loadInt(json, 'width', 0);
@@ -582,25 +582,25 @@
   /**
    * @constructor
    */
-  spriter.Folder = function() {
+  function Folder() {
     /** @type {number} */
     this.id = -1;
-    /** @type {Array.<spriter.File>} */
+    /** @type {Array.<File>} */
     this.files = [];
   }
 
   /**
-   * @return {spriter.Folder}
+   * @return {Folder}
    * @param {Object.<string,?>} json
    */
-  spriter.Folder.prototype.load = function(json) {
+  Folder.prototype.load = function(json) {
     this.id = loadInt(json, 'id', -1);
     this.files.length = 0;
     json.file = makeArray(json.file);
     var file;
     for (var i = 0; i < json.file.length; i++) {
       file = json.file[i];
-      this.files.push(new spriter.File().load(file));
+      this.files.push(new File().load(file));
     }
     return this;
   }
@@ -608,22 +608,22 @@
   /**
    * @constructor
    */
-  spriter.Bone = function() {
+  function Bone() {
     /** @type {number} */
     this.id = -1;
     /** @type {number} */
     this.parentID = -1;
-    /** @type {spriter.Transform} */
-    this.localSpace = new spriter.Transform();
-    /** @type {spriter.Transform} */
-    this.worldSpace = new spriter.Transform();
+    /** @type {Transform} */
+    this.localSpace = new Transform();
+    /** @type {Transform} */
+    this.worldSpace = new Transform();
   }
 
   /**
-   * @return {spriter.Bone}
+   * @return {Bone}
    * @param {Object.<string,?>} json
    */
-  spriter.Bone.prototype.load = function(json) {
+  Bone.prototype.load = function(json) {
     this.id = loadInt(json, 'id', -1);
     this.parentID = loadInt(json, 'parent', -1);
     this.localSpace.load(json);
@@ -632,18 +632,18 @@
   }
 
   /**
-   * @return {spriter.Bone}
-   * @param {spriter.Bone=} other
+   * @return {Bone}
+   * @param {Bone=} other
    */
-  spriter.Bone.prototype.clone = function(other) {
-    return (other || new spriter.Bone()).copy(this);
+  Bone.prototype.clone = function(other) {
+    return (other || new Bone()).copy(this);
   }
 
   /**
-   * @return {spriter.Bone}
-   * @param {spriter.Bone} other
+   * @return {Bone}
+   * @param {Bone} other
    */
-  spriter.Bone.prototype.copy = function(other) {
+  Bone.prototype.copy = function(other) {
     this.id = other.id;
     this.parentID = other.parentID;
     this.localSpace.copy(other.localSpace);
@@ -653,31 +653,31 @@
 
   /**
    * @return {void}
-   * @param {spriter.Bone} other
+   * @param {Bone} other
    * @param {number} tween
    * @param {number} spin
    */
-  spriter.Bone.prototype.tween = function(other, tween, spin) {
-    spriter.Transform.tween(this.localSpace, other.localSpace, tween, spin, this.localSpace);
+  Bone.prototype.tween = function(other, tween, spin) {
+    Transform.tween(this.localSpace, other.localSpace, tween, spin, this.localSpace);
   }
 
   /**
-   * @return {spriter.Transform}
-   * @param {spriter.Bone} bone
-   * @param {Array.<spriter.Bone>} bones
-   * @param {spriter.Transform=} out
+   * @return {Transform}
+   * @param {Bone} bone
+   * @param {Array.<Bone>} bones
+   * @param {Transform=} out
    */
-  spriter.Bone.flatten = function(bone, bones, out) {
-    out = out || new spriter.Transform();
+  Bone.flatten = function(bone, bones, out) {
+    out = out || new Transform();
 
     var parent_bone = bones[bone.parentID];
     if (parent_bone) {
-      spriter.Bone.flatten(parent_bone, bones, out);
+      Bone.flatten(parent_bone, bones, out);
     } else {
-      spriter.Transform.identity(out);
+      Transform.identity(out);
     }
 
-    spriter.Transform.combine(out, bone.localSpace, out);
+    Transform.combine(out, bone.localSpace, out);
 
     return out;
   }
@@ -685,7 +685,7 @@
   /**
    * @constructor
    */
-  spriter.BoneRef = function() {
+  function BoneRef() {
     /** @type {number} */
     this.id = -1;
     /** @type {number} */
@@ -697,10 +697,10 @@
   }
 
   /**
-   * @return {spriter.BoneRef}
+   * @return {BoneRef}
    * @param {Object.<string,?>} json
    */
-  spriter.BoneRef.prototype.load = function(json) {
+  BoneRef.prototype.load = function(json) {
     this.id = loadInt(json, 'id', -1);
     this.parentID = loadInt(json, 'parent', -1);
     this.timelineID = loadInt(json, 'timeline', -1);
@@ -709,18 +709,18 @@
   }
 
   /**
-   * @return {spriter.BoneRef}
-   * @param {spriter.BoneRef=} other
+   * @return {BoneRef}
+   * @param {BoneRef=} other
    */
-  spriter.BoneRef.prototype.clone = function(other) {
-    return (other || new spriter.BoneRef()).copy(this);
+  BoneRef.prototype.clone = function(other) {
+    return (other || new BoneRef()).copy(this);
   }
 
   /**
-   * @return {spriter.BoneRef}
-   * @param {spriter.BoneRef} other
+   * @return {BoneRef}
+   * @param {BoneRef} other
    */
-  spriter.BoneRef.prototype.copy = function(other) {
+  BoneRef.prototype.copy = function(other) {
     this.id = other.id;
     this.parentID = other.parentID;
     this.timelineID = other.timelineID;
@@ -731,7 +731,7 @@
   /**
    * @constructor
    */
-  spriter.Obj = function() {
+  function Obj() {
     /** @type {number} */
     this.id = -1;
     /** @type {number} */
@@ -740,14 +740,14 @@
     this.folderID = -1;
     /** @type {number} */
     this.fileID = -1;
-    /** @type {spriter.Transform} */
-    this.localSpace = new spriter.Transform();
-    /** @type {spriter.Transform} */
-    this.worldSpace = new spriter.Transform();
+    /** @type {Transform} */
+    this.localSpace = new Transform();
+    /** @type {Transform} */
+    this.worldSpace = new Transform();
     /** @type {boolean} */
     this.defaultPivot = false;
-    /** @type {spriter.Pivot} */
-    this.pivot = new spriter.Pivot();
+    /** @type {Pivot} */
+    this.pivot = new Pivot();
     /** @type {number} */
     this.zIndex = 0;
     /** @type {number} */
@@ -755,10 +755,10 @@
   }
 
   /**
-   * @return {spriter.Obj}
+   * @return {Obj}
    * @param {Object.<string,?>} json
    */
-  spriter.Obj.prototype.load = function(data, json) {
+  Obj.prototype.load = function(data, json) {
     this.id = loadInt(json, 'id', -1);
     this.parentID = loadInt(json, 'parent', -1);
     this.folderID = loadInt(json, 'folder', -1);
@@ -780,18 +780,18 @@
   }
 
   /**
-   * @return {spriter.Obj}
-   * @param {spriter.Obj=} other
+   * @return {Obj}
+   * @param {Obj=} other
    */
-  spriter.Obj.prototype.clone = function(other) {
-    return (other || new spriter.Obj()).copy(this);
+  Obj.prototype.clone = function(other) {
+    return (other || new Obj()).copy(this);
   }
 
   /**
-   * @return {spriter.Obj}
-   * @param {spriter.Obj} other
+   * @return {Obj}
+   * @param {Obj} other
    */
-  spriter.Obj.prototype.copy = function(other) {
+  Obj.prototype.copy = function(other) {
     this.id = other.id;
     this.parentID = other.parentID;
     this.folderID = other.folderID;
@@ -807,20 +807,20 @@
 
   /**
    * @return {void}
-   * @param {spriter.Obj} other
+   * @param {Obj} other
    * @param {number} twn
    * @param {number} spin
    */
-  spriter.Obj.prototype.tween = function(other, twn, spin) {
-    spriter.Transform.tween(this.localSpace, other.localSpace, twn, spin, this.localSpace);
-    spriter.Vector.tween(this.pivot, other.pivot, twn, this.pivot);
+  Obj.prototype.tween = function(other, twn, spin) {
+    Transform.tween(this.localSpace, other.localSpace, twn, spin, this.localSpace);
+    Vector.tween(this.pivot, other.pivot, twn, this.pivot);
     this.alpha = tween(this.alpha, other.alpha, twn);
   }
 
   /**
    * @constructor
    */
-  spriter.ObjRef = function() {
+  function ObjRef() {
     /** @type {number} */
     this.id = -1;
     /** @type {number} */
@@ -834,10 +834,10 @@
   }
 
   /**
-   * @return {spriter.ObjRef}
+   * @return {ObjRef}
    * @param {Object.<string,?>} json
    */
-  spriter.ObjRef.prototype.load = function(json) {
+  ObjRef.prototype.load = function(json) {
     this.id = loadInt(json, 'id', -1);
     this.parentID = loadInt(json, 'parent', -1);
     this.timelineID = loadInt(json, 'timeline', -1);
@@ -847,18 +847,18 @@
   }
 
   /**
-   * @return {spriter.ObjRef}
-   * @param {spriter.ObjRef=} other
+   * @return {ObjRef}
+   * @param {ObjRef=} other
    */
-  spriter.ObjRef.prototype.clone = function(other) {
-    return (other || new spriter.ObjRef()).copy(this);
+  ObjRef.prototype.clone = function(other) {
+    return (other || new ObjRef()).copy(this);
   }
 
   /**
-   * @return {spriter.ObjRef}
-   * @param {spriter.ObjRef} other
+   * @return {ObjRef}
+   * @param {ObjRef} other
    */
-  spriter.ObjRef.prototype.copy = function(other) {
+  ObjRef.prototype.copy = function(other) {
     this.id = other.id;
     this.parentID = other.parentID;
     this.timelineID = other.timelineID;
@@ -870,7 +870,7 @@
   /**
    * @constructor
    */
-  spriter.Keyframe = function() {
+  function Keyframe() {
     /** @type {number} */
     this.id = -1;
     /** @type {number} */
@@ -878,10 +878,10 @@
   }
 
   /**
-   * @return {spriter.Keyframe}
+   * @return {Keyframe}
    * @param {Object.<string,?>} json
    */
-  spriter.Keyframe.prototype.load = function(json) {
+  Keyframe.prototype.load = function(json) {
     this.id = loadInt(json, 'id', -1);
     this.time = loadInt(json, 'time', 0);
     return this;
@@ -889,10 +889,10 @@
 
   /**
    * @return {number}
-   * @param {Array.<spriter.Keyframe>} array
+   * @param {Array.<Keyframe>} array
    * @param {number} time
    */
-  spriter.Keyframe.find = function(array, time) {
+  Keyframe.find = function(array, time) {
     if (array.length <= 0) {
       return -1;
     }
@@ -924,49 +924,49 @@
 
   /**
    * @return {number}
-   * @param {spriter.Keyframe} a
-   * @param {spriter.Keyframe} b
+   * @param {Keyframe} a
+   * @param {Keyframe} b
    */
-  spriter.Keyframe.compare = function(a, b) {
+  Keyframe.compare = function(a, b) {
     return a.time - b.time;
   }
 
   /**
    * @constructor
-   * @extends {spriter.Keyframe}
+   * @extends {Keyframe}
    */
-  spriter.MainlineKeyframe = function() {
-    spriter.Keyframe.call(this);
+  function MainlineKeyframe() {
+    Keyframe.call(this);
 
-    /** @type {Array.<spriter.Bone|spriter.BoneRef>} */
+    /** @type {Array.<Bone|BoneRef>} */
     this.bones = null;
-    /** @type {Array.<spriter.Object|spriter.ObjRef>} */
+    /** @type {Array.<Object|ObjRef>} */
     this.objects = null;
   }
 
-  spriter.MainlineKeyframe.prototype = Object.create(spriter.Keyframe.prototype);
-  spriter.MainlineKeyframe.constructor = spriter.MainlineKeyframe;
+  MainlineKeyframe.prototype = Object.create(Keyframe.prototype);
+  MainlineKeyframe.prototype.constructor = MainlineKeyframe;
 
   /**
-   * @return {spriter.MainlineKeyframe}
+   * @return {MainlineKeyframe}
    * @param {Object.<string,?>} json
    */
-  spriter.MainlineKeyframe.prototype.load = function(data, json) {
+  MainlineKeyframe.prototype.load = function(data, json) {
     var i, len;
 
-    spriter.Keyframe.prototype.load.call(this, json)
+    Keyframe.prototype.load.call(this, json)
 
     // combine bones and bone_refs into one array and sort by id
     this.bones = [];
 
     json.bone = makeArray(json.bone);
     for (i = 0, len = json.bone.length; i < len; i++) {
-      this.bones.push(new spriter.Bone().load(json.bone[i]));
+      this.bones.push(new Bone().load(json.bone[i]));
     }
 
     json.bone_ref = makeArray(json.bone_ref);
     for (i = 0, len = json.bone_ref.length; i < len; i++) {
-      this.bones.push(new spriter.BoneRef().load(json.bone_ref[i]));
+      this.bones.push(new BoneRef().load(json.bone_ref[i]));
     }
 
     this.bones = this.bones.sort(function(a, b) {
@@ -980,12 +980,12 @@
     json.object.forEach(function(object_json) {
     });
     for (i = 0, len = json.object.length; i < len; i++) {
-      this.objects.push(new spriter.Obj().load(data, json.object[i]));
+      this.objects.push(new Obj().load(data, json.object[i]));
     }
 
     json.object_ref = makeArray(json.object_ref);
     for (i = 0, len = json.object_ref.length; i < len; i++) {
-      this.objects.push(new spriter.ObjRef().load(json.object_ref[i]));
+      this.objects.push(new ObjRef().load(json.object_ref[i]));
     }
 
     this.objects = this.objects.sort(function(a, b) {
@@ -998,31 +998,31 @@
   /**
    * @constructor
    */
-  spriter.Mainline = function() {
-    /** @type {Array.<spriter.MainlineKeyframe>} */
+  function Mainline() {
+    /** @type {Array.<MainlineKeyframe>} */
     this.keyframes = [];
   }
 
   /**
-   * @return {spriter.Mainline}
+   * @return {Mainline}
    * @param {Object.<string,?>} json
    */
-  spriter.Mainline.prototype.load = function(data, json) {
+  Mainline.prototype.load = function(data, json) {
     json.key = makeArray(json.key);
     for (var i = 0, len = json.key.length; i < len; i++) {
-      this.keyframes.push(new spriter.MainlineKeyframe().load(data, json.key[i]));
+      this.keyframes.push(new MainlineKeyframe().load(data, json.key[i]));
     }
-    this.keyframes = this.keyframes.sort(spriter.Keyframe.compare);
+    this.keyframes = this.keyframes.sort(Keyframe.compare);
     return this;
   }
 
   /**
    * @constructor
-   * @extends {spriter.Keyframe}
+   * @extends {Keyframe}
    * @param {string} type
    */
-  spriter.TimelineKeyframe = function(type) {
-    spriter.Keyframe.call(this);
+  function TimelineKeyframe(type) {
+    Keyframe.call(this);
     this.type = type;
 
     /** @type {string} */
@@ -1037,14 +1037,14 @@
     this.c2 = 0;
   }
 
-  spriter.TimelineKeyframe.prototype = Object.create(spriter.Keyframe.prototype);
-  spriter.TimelineKeyframe.constructor = spriter.TimelineKeyframe;
+  TimelineKeyframe.prototype = Object.create(Keyframe.prototype);
+  TimelineKeyframe.prototype.constructor = TimelineKeyframe;
 
   /**
-   * @return {spriter.TimelineKeyframe}
+   * @return {TimelineKeyframe}
    * @param {Object.<string,?>} json
    */
-  spriter.TimelineKeyframe.prototype.load = function(json) {
+  TimelineKeyframe.prototype.load = function(json) {
     this.id = loadInt(json, 'id', -1);
     this.time = loadInt(json, 'time', 0);
     this.spin = loadInt(json, 'spin', 1);
@@ -1054,7 +1054,7 @@
     return this;
   }
 
-  spriter.TimelineKeyframe.prototype.evaluateCurve = function(time, time1, time2) {
+  TimelineKeyframe.prototype.evaluateCurve = function(time, time1, time2) {
     if (time1 === time2) {
       return 0;
     }
@@ -1076,56 +1076,56 @@
 
   /**
    * @constructor
-   * @extends {spriter.TimelineKeyframe}
+   * @extends {TimelineKeyframe}
    */
-  spriter.BoneTimelineKeyframe = function() {
-    spriter.TimelineKeyframe.call(this, 'bone');
+  function BoneTimelineKeyframe() {
+    TimelineKeyframe.call(this, 'bone');
 
-    /** @type {spriter.Bone} */
+    /** @type {Bone} */
     this.bone = null;
   }
 
-  spriter.BoneTimelineKeyframe.prototype = Object.create(spriter.TimelineKeyframe.prototype);
-  spriter.BoneTimelineKeyframe.constructor = spriter.BoneTimelineKeyframe;
+  BoneTimelineKeyframe.prototype = Object.create(TimelineKeyframe.prototype);
+  BoneTimelineKeyframe.prototype.constructor = BoneTimelineKeyframe;
 
   /**
-   * @return {spriter.TimelineKeyframe}
+   * @return {TimelineKeyframe}
    * @param {Object.<string,?>} json
    */
-  spriter.BoneTimelineKeyframe.prototype.load = function(json) {
-    spriter.TimelineKeyframe.prototype.load.call(this, json);
-    this.bone = new spriter.Bone().load(json.bone || {});
+  BoneTimelineKeyframe.prototype.load = function(json) {
+    TimelineKeyframe.prototype.load.call(this, json);
+    this.bone = new Bone().load(json.bone || {});
     return this;
   }
 
   /**
    * @constructor
-   * @extends {spriter.TimelineKeyframe}
+   * @extends {TimelineKeyframe}
    */
-  spriter.ObjectTimelineKeyframe = function() {
-    spriter.TimelineKeyframe.call(this, 'object');
+  function ObjectTimelineKeyframe() {
+    TimelineKeyframe.call(this, 'object');
 
-    /** @type {spriter.Object} */
+    /** @type {Object} */
     this.object = null;
   }
 
-  spriter.ObjectTimelineKeyframe.prototype = Object.create(spriter.TimelineKeyframe.prototype);
-  spriter.ObjectTimelineKeyframe.constructor = spriter.ObjectTimelineKeyframe;
+  ObjectTimelineKeyframe.prototype = Object.create(TimelineKeyframe.prototype);
+  ObjectTimelineKeyframe.prototype.constructor = ObjectTimelineKeyframe;
 
   /**
-   * @return {spriter.TimelineKeyframe}
+   * @return {TimelineKeyframe}
    * @param {Object.<string,?>} json
    */
-  spriter.ObjectTimelineKeyframe.prototype.load = function(data, json) {
-    spriter.TimelineKeyframe.prototype.load.call(this, json);
-    this.object = new spriter.Obj().load(data, json.object || {});
+  ObjectTimelineKeyframe.prototype.load = function(data, json) {
+    TimelineKeyframe.prototype.load.call(this, json);
+    this.object = new Obj().load(data, json.object || {});
     return this;
   }
 
   /**
    * @constructor
    */
-  spriter.Timeline = function(animation) {
+  function Timeline(animation) {
     this.animation = animation;
 
     /** @type {number} */
@@ -1137,15 +1137,15 @@
     /** @type {number} */
     this.index = -1;
 
-    /** @type {Array.<spriter.TimelineKeyframe>} */
+    /** @type {Array.<TimelineKeyframe>} */
     this.keyframes = null;
   }
 
   /**
-   * @return {spriter.Timeline}
+   * @return {Timeline}
    * @param {Object.<string,?>} json
    */
-  spriter.Timeline.prototype.load = function(data, json) {
+  Timeline.prototype.load = function(data, json) {
     var i, len;
 
     this.id = loadInt(json, 'id', -1);
@@ -1158,7 +1158,7 @@
     switch (this.type) {
       case 'sprite':
         for (i = 0, len = json.key.length; i < len; i++) {
-          this.keyframes.push(new spriter.ObjectTimelineKeyframe().load(data, json.key[i]));
+          this.keyframes.push(new ObjectTimelineKeyframe().load(data, json.key[i]));
         }
         var sprites = this.animation.entity.sprites;
         var sprite = sprites[this.name];
@@ -1171,7 +1171,7 @@
         break;
       case 'bone':
         for (i = 0, len = json.key.length; i < len; i++) {
-          this.keyframes.push(new spriter.BoneTimelineKeyframe().load(json.key[i]));
+          this.keyframes.push(new BoneTimelineKeyframe().load(json.key[i]));
         }
         break;
       case 'box':
@@ -1180,10 +1180,10 @@
       case 'entity':
       case 'variable':
       default:
-        console.log('TODO: spriter.Timeline::load', this.type);
+        console.log('TODO: Timeline::load', this.type);
         break;
     }
-    this.keyframes = this.keyframes.sort(spriter.Keyframe.compare);
+    this.keyframes = this.keyframes.sort(Keyframe.compare);
 
     return this;
   }
@@ -1191,7 +1191,7 @@
   /**
    * @constructor
    */
-  spriter.Animation = function(entity) {
+  function Animation(entity) {
     this.entity = entity;
     /** @type {number} */
     this.id = -1;
@@ -1203,9 +1203,9 @@
     this.looping = 'true'; // 'true', 'false' or 'ping_pong'
     /** @type {number} */
     this.loopTo = 0;
-    /** @type {spriter.Mainline} */
+    /** @type {Mainline} */
     this.mainline = null;
-    /** @type {Array.<spriter.Timeline>} */
+    /** @type {Array.<Timeline>} */
     this.timelines = null;
     /** @type {number} */
     this.minTime = 0;
@@ -1214,10 +1214,10 @@
   }
 
   /**
-   * @return {spriter.Animation}
+   * @return {Animation}
    * @param {Object.<string,?>} json
    */
-  spriter.Animation.prototype.load = function(data, json) {
+  Animation.prototype.load = function(data, json) {
     this.id = loadInt(json, 'id', -1);
     this.name = loadString(json, 'name', '');
     this.length = loadInt(json, 'length', 0);
@@ -1225,12 +1225,12 @@
     this.loopTo = loadInt(json, 'loop_to', 0);
 
     json.mainline = json.mainline || {};
-    this.mainline = new spriter.Mainline().load(data, json.mainline);
+    this.mainline = new Mainline().load(data, json.mainline);
 
     this.timelines = [];
     json.timeline = makeArray(json.timeline);
     for (var i = 0, len = json.timeline.length; i < len; i++) {
-      this.timelines.push(new spriter.Timeline(this).load(data, json.timeline[i]));
+      this.timelines.push(new Timeline(this).load(data, json.timeline[i]));
     }
 
     this.minTime = 0;
@@ -1240,9 +1240,12 @@
   }
 
   /**
+   * SpriterAnimation is the represent of "entity" in Spriter
+   * @param {String} sconKey    Which scon file to use for this animation
+   * @param {String} entityName Name of the entity you want to create
    * @constructor
    */
-  spriter.SpriterAnimation = function(sconKey, entityName) {
+  function SpriterAnimation(sconKey, entityName) {
     PIXI.Container.call(this);
     this.scale.y = -1; // FIXME: inverse the transform instead of set y scale
 
@@ -1255,14 +1258,14 @@
     this.id = loadInt(entityDef, 'id', -1);
     /** @type {string} */
     this.name = loadString(entityDef, 'name', '');
-    /** @type {Object.<string,spriter.Animation>} */
+    /** @type {Object.<string,Animation>} */
     this.anims = {};
     /** @type {Array.<string>} */
     this.animNames = [];
 
-    /** @type {Array.<spriter.Bone>} */
+    /** @type {Array.<Bone>} */
     this.bones = [];
-    /** @type {Array.<spriter.Object>} */
+    /** @type {Array.<Object>} */
     this.objects = [];
     /** @type {string} */
     this.currAnimName = '';
@@ -1270,6 +1273,11 @@
     this.time = 0;
     /** @type {number} */
     this.elapsedTime = 0;
+
+    /** @type {Boolean} Whether current animation is ended */
+    this.isEnd = true;
+    /** @type {Boolean} Whether stop instead of loop at the end of current animation */
+    this.stopAtEnd = false;
 
     /** @type {boolean} */
     this.dirty = true;
@@ -1283,42 +1291,60 @@
 
     // Create animations
     for (var i = 0, len = entityDef.animation.length; i < len; i++) {
-      var animation = new spriter.Animation(this).load(data, entityDef.animation[i]);
+      var animation = new Animation(this).load(data, entityDef.animation[i]);
       this.anims[animation.name] = animation;
       this.animNames.push(animation.name);
     }
   }
 
-  spriter.SpriterAnimation.prototype = Object.create(PIXI.Container.prototype);
-  spriter.SpriterAnimation.prototype.constructor = spriter.SpriterAnimation;
+  SpriterAnimation.prototype = Object.create(PIXI.Container.prototype);
+  SpriterAnimation.prototype.constructor = SpriterAnimation;
 
-  spriter.SpriterAnimation.prototype.play = function(anim, loop) {
-    this.setAnim(anim);
-  };
-  spriter.SpriterAnimation.prototype.currAnim = function() {
-    return this.anims[this.currAnimName];
-  };
-  spriter.SpriterAnimation.prototype.getAnim = function() {
-    return this.currAnimName;
-  };
-  spriter.SpriterAnimation.prototype.setAnim = function(currAnimName) {
-    if (this.currAnimName !== currAnimName) {
-      this.currAnimName = currAnimName;
-      var anim = this.currAnim();
-      if (anim) {
-        this.time = wrap(this.time, anim.minTime, anim.maxTime);
-      }
-      this.elapsedTime = 0;
-      this.dirty = true;
-    }
-  };
-  spriter.SpriterAnimation.prototype.getTime = function() {
-    return this.time;
-  };
-  spriter.SpriterAnimation.prototype.setTime = function(time) {
+  /**
+   * Play an animation by its name
+   * @param  {String} anim        Name of the animation
+   * @param  {Boolean} stopAtEnd  Whether stop when animation is finished
+   */
+  SpriterAnimation.prototype.play = function(anim, stopAtEnd) {
+    this.stopAtEnd = !!stopAtEnd;
+    this.isEnd = false;
+    this.currAnimName = anim;
+
     var anim = this.currAnim();
     if (anim) {
-      time = wrap(time, anim.minTime, anim.maxTime);
+      this.time = anim.minTime;
+    }
+
+    this.elapsedTime = 0;
+    this.dirty = true;
+  };
+  /**
+   * Get current animation object
+   * @return {Animation}
+   */
+  SpriterAnimation.prototype.currAnim = function() {
+    return this.anims[this.currAnimName];
+  };
+  /**
+   * Set time of current animation
+   * @param {Number} time Time(ms)
+   */
+  SpriterAnimation.prototype.setTime = function(time) {
+    var anim = this.currAnim();
+    if (anim) {
+      if (time >= anim.maxTime) {
+        if (this.stopAtEnd) {
+          time = anim.maxTime;
+          if (!this.isEnd) {
+            this.isEnd = true;
+            this.emit('end', this.currAnimName);
+          }
+        }
+        else {
+          time = wrap(time, anim.minTime, anim.maxTime);
+          this.emit('loop', this.currAnimName);
+        }
+      }
     }
 
     if (this.time !== time) {
@@ -1327,9 +1353,9 @@
       this.dirty = true;
     }
   };
-  spriter.SpriterAnimation.prototype.update = function(elapsed) {
+  SpriterAnimation.prototype.update = function(elapsed) {
     // Update timer
-    this.setTime(this.getTime() + elapsed);
+    this.setTime(this.time + elapsed);
 
     // Update body parts
     if (!this.dirty) {
@@ -1348,7 +1374,7 @@
 
     if (anim) {
       var mainline_keyframe_array = anim.mainline.keyframes;
-      var mainline_keyframe_index = spriter.Keyframe.find(mainline_keyframe_array, time);
+      var mainline_keyframe_index = Keyframe.find(mainline_keyframe_array, time);
       var mainline_keyframe = mainline_keyframe_array[mainline_keyframe_index];
 
       var timelines = anim.timelines;
@@ -1357,10 +1383,10 @@
       var pose_bone_array = sprAnim.bones;
 
       data_bone_array.forEach(function(data_bone, bone_index) {
-        var pose_bone = pose_bone_array[bone_index] = (pose_bone_array[bone_index] || new spriter.Bone());
+        var pose_bone = pose_bone_array[bone_index] = (pose_bone_array[bone_index] || new Bone());
 
-        if (data_bone instanceof spriter.BoneRef) {
-          // bone is a spriter.BoneRef, dereference
+        if (data_bone instanceof BoneRef) {
+          // bone is a BoneRef, dereference
           var timelineID = data_bone.timelineID;
           var keyframeID = data_bone.keyframeID;
           var timeline = timelines[timelineID];
@@ -1385,8 +1411,8 @@
             var tween = timeline_keyframe.evaluateCurve(time, time1, time2);
             pose_bone.tween(bone2, tween, timeline_keyframe.spin);
           }
-        } else if (data_bone instanceof spriter.Bone) {
-          // bone is a spriter.Bone, copy
+        } else if (data_bone instanceof Bone) {
+          // bone is a Bone, copy
           pose_bone.copy(data_bone);
         } else {
           throw new Error();
@@ -1399,7 +1425,7 @@
       pose_bone_array.forEach(function(bone) {
         var parent_bone = pose_bone_array[bone.parentID];
         if (parent_bone) {
-          spriter.Transform.combine(parent_bone.worldSpace, bone.localSpace, bone.worldSpace);
+          Transform.combine(parent_bone.worldSpace, bone.localSpace, bone.worldSpace);
         } else {
           bone.worldSpace.copy(bone.localSpace);
         }
@@ -1409,10 +1435,10 @@
       var pose_object_array = sprAnim.objects;
 
       data_object_array.forEach(function(data_object, object_index) {
-        var pose_object = pose_object_array[object_index] = (pose_object_array[object_index] || new spriter.Obj());
+        var pose_object = pose_object_array[object_index] = (pose_object_array[object_index] || new Obj());
 
-        if (data_object instanceof spriter.ObjRef) {
-          // object is a spriter.ObjRef, dereference
+        if (data_object instanceof ObjRef) {
+          // object is a ObjRef, dereference
           var timelineID = data_object.timelineID;
           var keyframeID = data_object.keyframeID;
           var timeline = timelines[timelineID];
@@ -1438,8 +1464,8 @@
             var tween = timeline_keyframe.evaluateCurve(time, time1, time2);
             pose_object.tween(object2, tween, timeline_keyframe.spin);
           }
-        } else if (data_object instanceof spriter.Object) {
-          // object is a spriter.Object, copy
+        } else if (data_object instanceof Object) {
+          // object is a Object, copy
           pose_object.copy(data_object);
         } else {
           throw new Error();
@@ -1460,12 +1486,12 @@
       pose_object_array.forEach(function(object, idx) {
         var bone = pose_bone_array[object.parentID];
         if (bone) {
-          spriter.Transform.combine(bone.worldSpace, object.localSpace, object.worldSpace);
+          Transform.combine(bone.worldSpace, object.localSpace, object.worldSpace);
           var folder = sprAnim.data.folder_array[object.folderID];
           var file = folder.files[object.fileID];
           var offset_x = (0.5 - object.pivot.x) * file.width;
           var offset_y = (0.5 - object.pivot.y) * file.height;
-          spriter.Transform.translate(object.worldSpace, offset_x, offset_y);
+          Transform.translate(object.worldSpace, offset_x, offset_y);
         } else {
           object.worldSpace.copy(object.localSpace);
         }
@@ -1493,14 +1519,14 @@
    * Data is the in memory structure that stores data of a scon file
    * @constructor
    */
-  spriter.Data = function(scon) {
+  function Data(scon) {
     /**
      * Scon data object
      * @type {Object}
      */
     this.scon = scon;
 
-    /** @type {Array.<spriter.Folder>} */
+    /** @type {Array.<Folder>} */
     this.folder_array = [];
 
     /** @type {Object} entityName -> entityData map */
@@ -1518,7 +1544,7 @@
     var i, len;
     // Fetch folder and file data
     for (i = 0, len = scon.folder.length; i < len; i++) {
-      this.folder_array.push(new spriter.Folder().load(scon.folder[i]));
+      this.folder_array.push(new Folder().load(scon.folder[i]));
     }
 
     // Construct entity data map
@@ -1530,7 +1556,7 @@
     }
   }
 
-  spriter.Data.prototype.getFile = function(folderIdx, fileIdx) {
+  Data.prototype.getFile = function(folderIdx, fileIdx) {
     return this.folder_array[folderIdx].files[fileIdx];
   };
 
@@ -1539,14 +1565,14 @@
    * @param  {String} entityName Name of the entity
    * @return {Object}            Defination data object
    */
-  spriter.Data.prototype.getEntityData = function(entityName) {
+  Data.prototype.getEntityData = function(entityName) {
     return this.entityDataMap[entityName];
   };
 
   /**
    * @return {Array.<string>}
    */
-  spriter.Data.prototype.getEntityKeys = function() {
+  Data.prototype.getEntityKeys = function() {
     return this.entityNames;
   }
 
@@ -1708,9 +1734,9 @@
   }
 
   /**
-   * Get texture for a spriter.Object instance
-   * @param  {spriter.Data} data      Spriter data instance
-   * @param  {spriter.Object} object  Texture for this object
+   * Get texture for a Object instance
+   * @param  {Data} data      Spriter data instance
+   * @param  {Object} object  Texture for this object
    * @return {PIXI.Texture}
    */
   function getTextureForObject(data, object) {
@@ -1719,6 +1745,10 @@
     return PIXI.utils.TextureCache[file.name];
   }
 
-  window.spriter = spriter;
+  // Export
+  spriter.loaderMiddleWare = loaderMiddleWare;
+  spriter.getData = getData;
 
-})(window.spriter || {});
+  spriter.SpriterAnimation = SpriterAnimation;
+
+})(window.spriter = {});

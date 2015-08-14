@@ -14,6 +14,35 @@
 (function(spriter) { 'use strict';
 
   /**
+   * Stores animation data (scon objects)
+   * @type {Object}
+   */
+  var scons = {};
+
+  spriter.loaderMiddleWare = function(res, next) {
+    if (res.url.match(/\.scon$/)) {
+      // console.log('%s is scon', res.url);
+      var path = res.url.replace(/[^\/]*$/, '');
+      var atlasUrl = res.url.replace(/\.scon$/, '.json');
+      // console.log(atlasUrl);
+      PIXI.loader.add(atlasUrl);
+
+      var scon = JSON.parse(res.data);
+      scons[res.name] = new spriter.Data().load(scon);
+    }
+    next();
+  };
+
+  /**
+   * Get the data object of a specific scon file asset key
+   * @param  {String} sconKey Key of the scon file
+   * @return {spriter.Data}   Data object created for the scon file
+   */
+  spriter.getData = function(sconKey) {
+    return scons[sconKey];
+  };
+
+  /**
    * @constructor
    * @param {number=} rad
    */
@@ -1212,7 +1241,7 @@
   /**
    * @constructor
    */
-  spriter.Entity = function() {
+  spriter.SprAnimation = function() {
     /**
      * Stores all the sprite instances for this entity
      * @type {PIXI.Sprite}
@@ -1226,13 +1255,18 @@
     this.animation_map = null;
     /** @type {Array.<string>} */
     this.animation_keys = null;
+
+    PIXI.Container.call(this);
   }
 
+  spriter.SprAnimation.prototype = Object.create(PIXI.Container.prototype);
+  spriter.SprAnimation.prototype.constructor = spriter.SprAnimation;
+
   /**
-   * @return {spriter.Entity}
+   * @return {spriter.SprAnimation}
    * @param {Object.<string,?>} json
    */
-  spriter.Entity.prototype.load = function(data, json) {
+  spriter.SprAnimation.prototype.load = function(data, json) {
     this.id = loadInt(json, 'id', -1);
     this.name = loadString(json, 'name', '');
 
@@ -1248,6 +1282,16 @@
     return this;
   }
 
+  spriter.SprAnimation.prototype.play = function(anim, loop) {
+    console.log((loop ? 'loop' : 'play') + ': %s', anim);
+  };
+  spriter.SprAnimation.prototype.update = function() {
+    // TODO...
+  };
+  spriter.SprAnimation.prototype.strike = function() {
+    // TODO...
+  };
+
   /**
    * @constructor
    */
@@ -1255,7 +1299,7 @@
     /** @type {Array.<spriter.Folder>} */
     this.folder_array = null;
 
-    /** @type {Object.<string,spriter.Entity>} */
+    /** @type {Object.<string,spriter.SprAnimation>} */
     this.entity_map = null;
     /** @type {Array.<string>} */
     this.entity_keys = null;
@@ -1280,55 +1324,57 @@
       data.folder_array.push(new spriter.Folder().load(folder));
     });
 
-    data.entity_map = {};
-    data.entity_keys = [];
-    json.spriter_data.entity = makeArray(json.entity);
-    json.spriter_data.entity.forEach(function(entity_json) {
-      var entity = new spriter.Entity().load(data, entity_json);
-      data.entity_map[entity.name] = entity;
-      data.entity_keys.push(entity.name);
-    });
 
-    // patch spriter.Object::pivot
+    // Create entities as PIXI.Container when use instead of here
+    // data.entity_map = {};
+    // data.entity_keys = [];
+    // json.spriter_data.entity = makeArray(json.entity);
+    // json.spriter_data.entity.forEach(function(entity_json) {
+    //   var entity = new spriter.SprAnimation().load(data, entity_json);
+    //   data.entity_map[entity.name] = entity;
+    //   data.entity_keys.push(entity.name);
+    // });
 
-    data.entity_keys.forEach(function(entity_key) {
-      var entity = data.entity_map[entity_key];
+    // // patch spriter.Object::pivot
 
-      entity.animation_keys.forEach(function(animation_key) {
-        var animation = entity.animation_map[animation_key];
+    // data.entity_keys.forEach(function(entity_key) {
+    //   var entity = data.entity_map[entity_key];
 
-        animation.mainline.keyframe_array.forEach(function(mainline_keyframe) {
-          mainline_keyframe.object_array.forEach(function(object) {
-            if (object instanceof spriter.Object) {
-              if (object.default_pivot) {
-                var folder = data.folder_array[object.folder_index];
-                var file = folder.file_array[object.file_index];
-                object.pivot.copy(file.pivot);
-              }
-            }
-          });
-        });
+    //   entity.animation_keys.forEach(function(animation_key) {
+    //     var animation = entity.animation_map[animation_key];
 
-        animation.timeline_array.forEach(function(timeline) {
-          timeline.keyframe_array.forEach(function(timeline_keyframe) {
-            if (timeline_keyframe instanceof spriter.ObjectTimelineKeyframe) {
-              var object = timeline_keyframe.object;
-              if (object.default_pivot) {
-                var folder = data.folder_array[object.folder_index];
-                var file = folder.file_array[object.file_index];
-                object.pivot.copy(file.pivot);
-              }
-            }
-          });
-        });
-      });
-    });
+    //     animation.mainline.keyframe_array.forEach(function(mainline_keyframe) {
+    //       mainline_keyframe.object_array.forEach(function(object) {
+    //         if (object instanceof spriter.Object) {
+    //           if (object.default_pivot) {
+    //             var folder = data.folder_array[object.folder_index];
+    //             var file = folder.file_array[object.file_index];
+    //             object.pivot.copy(file.pivot);
+    //           }
+    //         }
+    //       });
+    //     });
+
+    //     animation.timeline_array.forEach(function(timeline) {
+    //       timeline.keyframe_array.forEach(function(timeline_keyframe) {
+    //         if (timeline_keyframe instanceof spriter.ObjectTimelineKeyframe) {
+    //           var object = timeline_keyframe.object;
+    //           if (object.default_pivot) {
+    //             var folder = data.folder_array[object.folder_index];
+    //             var file = folder.file_array[object.file_index];
+    //             object.pivot.copy(file.pivot);
+    //           }
+    //         }
+    //       });
+    //     });
+    //   });
+    // });
 
     return data;
   }
 
   /**
-   * @return {Object.<string, spriter.Entity>}
+   * @return {Object.<string, spriter.SprAnimation>}
    */
   spriter.Data.prototype.getEntities = function() {
     return this.entity_map;
@@ -1399,7 +1445,7 @@
   }
 
   /**
-   * @return {Object.<string, spriter.Entity>}
+   * @return {Object.<string, spriter.SprAnimation>}
    */
   spriter.Pose.prototype.getEntities = function() {
     if (this.data) {
@@ -1419,7 +1465,7 @@
   }
 
   /**
-   * @return {spriter.Entity}
+   * @return {spriter.SprAnimation}
    */
   spriter.Pose.prototype.curEntity = function() {
     var entity_map = this.data.entity_map;

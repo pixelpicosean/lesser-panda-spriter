@@ -1518,7 +1518,6 @@
       this.entityMap[entityDef.name] = entity;
       this.entityNames.push(entityDef.name);
     }
-    console.log(this.entityMap);
   }
 
   Data.prototype.getFile = function(folderIdx, fileIdx) {

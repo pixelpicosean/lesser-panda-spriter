@@ -28,7 +28,7 @@
       PIXI.loader.add(atlasUrl);
 
       var scon = JSON.parse(res.data);
-      scons[res.name] = new spriter.Data().load(scon);
+      scons[res.name] = new spriter.Data(scon);
     }
     next();
   };
@@ -1241,46 +1241,77 @@
   /**
    * @constructor
    */
-  spriter.SprAnimation = function() {
+  spriter.SprAnimation = function(sconKey, entityName) {
+    PIXI.Container.call(this);
+
+    var data = spriter.getData(sconKey);
+    var entityDef = data.getEntityData(entityName);
+
+    /** @type {number} */
+    this.id = loadInt(entityDef, 'id', -1);
+    /** @type {string} */
+    this.name = loadString(entityDef, 'name', '');
+    /** @type {Object.<string,spriter.Animation>} */
+    this.animation_map = {};
+    /** @type {Array.<string>} */
+    this.animation_keys = [];
+
     /**
      * Stores all the sprite instances for this entity
      * @type {PIXI.Sprite}
+     * @private
      */
     this.sprites = {};
-    /** @type {number} */
-    this.id = -1;
-    /** @type {string} */
-    this.name = '';
-    /** @type {Object.<string,spriter.Animation>} */
-    this.animation_map = null;
-    /** @type {Array.<string>} */
-    this.animation_keys = null;
 
-    PIXI.Container.call(this);
-  }
+    // Create entities as PIXI.Container when use instead of here
+    // data.entity_map = {};
+    // data.entity_keys = [];
 
-  spriter.SprAnimation.prototype = Object.create(PIXI.Container.prototype);
-  spriter.SprAnimation.prototype.constructor = spriter.SprAnimation;
+    // data.entity_keys.forEach(function(entity_key) {
+    //   var entity = data.entity_map[entity_key];
 
-  /**
-   * @return {spriter.SprAnimation}
-   * @param {Object.<string,?>} json
-   */
-  spriter.SprAnimation.prototype.load = function(data, json) {
-    this.id = loadInt(json, 'id', -1);
-    this.name = loadString(json, 'name', '');
+    //   entity.animation_keys.forEach(function(animation_key) {
+    //     var animation = entity.animation_map[animation_key];
 
-    this.animation_map = {};
-    this.animation_keys = [];
-    json.animation = makeArray(json.animation);
-    for (var i = 0, len = json.animation.length; i < len; i++) {
-      var animation = new spriter.Animation(this).load(data, json.animation[i]);
+    //     animation.mainline.keyframe_array.forEach(function(mainline_keyframe) {
+    //       mainline_keyframe.object_array.forEach(function(object) {
+    //         if (object instanceof spriter.Object) {
+    //           if (object.default_pivot) {
+    //             var folder = data.folder_array[object.folder_index];
+    //             var file = folder.file_array[object.file_index];
+    //             object.pivot.copy(file.pivot);
+    //           }
+    //         }
+    //       });
+    //     });
+
+    //     animation.timeline_array.forEach(function(timeline) {
+    //       timeline.keyframe_array.forEach(function(timeline_keyframe) {
+    //         if (timeline_keyframe instanceof spriter.ObjectTimelineKeyframe) {
+    //           var object = timeline_keyframe.object;
+    //           if (object.default_pivot) {
+    //             var folder = data.folder_array[object.folder_index];
+    //             var file = folder.file_array[object.file_index];
+    //             object.pivot.copy(file.pivot);
+    //           }
+    //         }
+    //       });
+    //     });
+    //   });
+    // });
+
+    // Create animations
+    for (var i = 0, len = entityDef.animation.length; i < len; i++) {
+      var animation = new spriter.Animation(this).load(data, entityDef.animation[i]);
       this.animation_map[animation.name] = animation;
       this.animation_keys.push(animation.name);
     }
 
-    return this;
+    console.log(this);
   }
+
+  spriter.SprAnimation.prototype = Object.create(PIXI.Container.prototype);
+  spriter.SprAnimation.prototype.constructor = spriter.SprAnimation;
 
   spriter.SprAnimation.prototype.play = function(anim, loop) {
     console.log((loop ? 'loop' : 'play') + ': %s', anim);
@@ -1293,38 +1324,57 @@
   };
 
   /**
+   * Data is the in memory structure that stores data of a scon file
    * @constructor
    */
-  spriter.Data = function() {
-    /** @type {Array.<spriter.Folder>} */
-    this.folder_array = null;
+  spriter.Data = function(scon) {
+    /**
+     * Scon data object
+     * @type {Object}
+     */
+    this.scon = scon;
 
-    /** @type {Object.<string,spriter.SprAnimation>} */
-    this.entity_map = null;
-    /** @type {Array.<string>} */
-    this.entity_keys = null;
+    /** @type {Array.<spriter.Folder>} */
+    this.folder_array = [];
+
+    /** @type {Object} entityName -> entityData map */
+    this.entityDataMap = {};
+
+    /** Scon file version */
+    this.sconVersion = loadString(scon, 'scon_version', '');
+    /** Scon file generator application */
+    this.generator = loadString(scon, 'generator', '');
+    /** Scon file generator application version */
+    this.generatorVersion = loadString(scon, 'generator_version', '');
+
+    var i, len;
+    // Fetch folder and file data
+    for (i = 0, len = scon.folder.length; i < len; i++) {
+      this.folder_array.push(new spriter.Folder().load(scon.folder[i]));
+    }
+
+    // Construct entity data map
+    var entity;
+    for (i = 0, len = scon.entity.length; i < len; i++) {
+      entity = scon.entity[i];
+      this.entityDataMap[entity.name] = entity;
+    }
   }
+
+  /**
+   * Get entity data
+   * @param  {String} entityName Name of the entity
+   * @return {Object}            Defination data object
+   */
+  spriter.Data.prototype.getEntityData = function(entityName) {
+    return this.entityDataMap[entityName];
+  };
 
   /**
    * @return {spriter.Data}
    * @param {?} json
    */
   spriter.Data.prototype.load = function(json) {
-    var data = this;
-
-    json.spriter_data = json.spriter_data || {};
-
-    var scml_version = loadString(json.spriter_data, 'scon_version', '');
-    var generator = loadString(json.spriter_data, 'generator', '');
-    var generator_version = loadString(json.spriter_data, 'generator_version', '');
-
-    data.folder_array = [];
-    json.spriter_data.folder = makeArray(json.folder);
-    json.spriter_data.folder.forEach(function(folder) {
-      data.folder_array.push(new spriter.Folder().load(folder));
-    });
-
-
     // Create entities as PIXI.Container when use instead of here
     // data.entity_map = {};
     // data.entity_keys = [];
@@ -1369,8 +1419,6 @@
     //     });
     //   });
     // });
-
-    return data;
   }
 
   /**

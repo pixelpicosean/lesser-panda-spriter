@@ -244,51 +244,11 @@
 
   /**
    * @constructor
-   * @extends {Vector}
-   */
-  function Scale() {
-    Vector.call(this, 1, 1);
-  }
-
-  Scale.prototype = Object.create(Vector.prototype);
-  Scale.prototype.constructor = Scale;
-
-  /**
-   * @return {Scale}
-   */
-  Scale.prototype.selfIdentity = function() {
-    this.x = 1;
-    this.y = 1;
-    return this;
-  }
-
-  /**
-   * @constructor
-   * @extends {Vector}
-   */
-  function Pivot() {
-    Vector.call(this, 0, 1);
-  }
-
-  Pivot.prototype = Object.create(Vector.prototype);
-  Pivot.prototype.constructor = Pivot;
-
-  /**
-   * @return {Pivot}
-   */
-  Pivot.prototype.selfIdentity = function() {
-    this.x = 0;
-    this.y = 1;
-    return this;
-  }
-
-  /**
-   * @constructor
    */
   function Transform() {
     this.position = new Vector();
     this.rotation = new Angle();
-    this.scale = new Scale();
+    this.scale = new Vector(1, 1);
   }
 
   /**
@@ -561,8 +521,8 @@
     this.width = 0;
     /** @type {number} */
     this.height = 0;
-    /** @type {Pivot} */
-    this.pivot = new Pivot();
+    /** @type {Vector} */
+    this.pivot = new Vector(0, 1);
   }
 
   /**
@@ -746,8 +706,8 @@
     this.worldSpace = new Transform();
     /** @type {boolean} */
     this.defaultPivot = false;
-    /** @type {Pivot} */
-    this.pivot = new Pivot();
+    /** @type {Vector} */
+    this.pivot = new Vector(0, 1);
     /** @type {number} */
     this.zIndex = 0;
     /** @type {number} */
@@ -977,8 +937,6 @@
     this.objects = [];
 
     json.object = makeArray(json.object);
-    json.object.forEach(function(object_json) {
-    });
     for (i = 0, len = json.object.length; i < len; i++) {
       this.objects.push(new Obj().load(data, json.object[i]));
     }
@@ -1382,8 +1340,10 @@
       var data_bone_array = mainline_keyframe.bones;
       var pose_bone_array = sprAnim.bones;
 
-      data_bone_array.forEach(function(data_bone, bone_index) {
-        var pose_bone = pose_bone_array[bone_index] = (pose_bone_array[bone_index] || new Bone());
+      var data_bone;
+      for (i = 0, len = data_bone_array.length; i < len; i++) {
+        data_bone = data_bone_array[i];
+        var pose_bone = pose_bone_array[i] = (pose_bone_array[i] || new Bone());
 
         if (data_bone instanceof BoneRef) {
           // bone is a BoneRef, dereference
@@ -1417,25 +1377,29 @@
         } else {
           throw new Error();
         }
-      });
+      };
 
       // clamp output bone array
       pose_bone_array.length = data_bone_array.length;
 
-      pose_bone_array.forEach(function(bone) {
+      var bone;
+      for (i = 0, len = pose_bone_array.length; i < len; i++) {
+        bone = pose_bone_array[i];
         var parent_bone = pose_bone_array[bone.parentID];
         if (parent_bone) {
           Transform.combine(parent_bone.worldSpace, bone.localSpace, bone.worldSpace);
         } else {
           bone.worldSpace.copy(bone.localSpace);
         }
-      });
+      };
 
       var data_object_array = mainline_keyframe.objects;
       var pose_object_array = sprAnim.objects;
 
-      data_object_array.forEach(function(data_object, object_index) {
-        var pose_object = pose_object_array[object_index] = (pose_object_array[object_index] || new Obj());
+      var data_object;
+      for (i = 0, len = data_object_array.length; i < len; i++) {
+        data_object = data_object_array[i];
+        var pose_object = pose_object_array[i] = (pose_object_array[i] || new Obj());
 
         if (data_object instanceof ObjRef) {
           // object is a ObjRef, dereference
@@ -1470,7 +1434,7 @@
         } else {
           throw new Error();
         }
-      });
+      };
 
       // Clamp output object array
       pose_object_array.length = data_object_array.length;
@@ -1483,7 +1447,9 @@
       this.children.length = 0;
 
       // Update transform of objects
-      pose_object_array.forEach(function(object, idx) {
+      var object;
+      for (i = 0, len = pose_object_array.length; i < len; i++) {
+        object = pose_object_array[i];
         var bone = pose_bone_array[object.parentID];
         if (bone) {
           Transform.combine(bone.worldSpace, object.localSpace, object.worldSpace);
@@ -1497,7 +1463,7 @@
         }
 
         // TODO: update object transform
-        var timelineID = data_object_array[idx].timelineID;
+        var timelineID = data_object_array[i].timelineID;
         var timeline = timelines[timelineID];
 
         var sprites = sprAnim.sprites;
@@ -1511,7 +1477,7 @@
 
         sprite.parent = sprAnim;
         sprAnim.children.push(sprite);
-      });
+      };
     }
   };
 

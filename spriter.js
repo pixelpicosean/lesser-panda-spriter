@@ -1149,7 +1149,7 @@
     for (var i = 0, len = json.key.length; i < len; i++) {
       this.keys.push(new EventlineKeyframe(json.key[i]));
     }
-    this.keys - this.keys.sort(Keyframe.compare);
+    this.keys = this.keys.sort(Keyframe.compare);
   }
 
   /**
@@ -1358,6 +1358,7 @@
 
       var timelines = anim.timelines;
 
+      // Update bones
       var data_bone_array = mainline_keyframe.bones;
       var pose_bone_array = sprAnim.bones;
 
@@ -1400,7 +1401,7 @@
         }
       };
 
-      // clamp output bone array
+      // Clamp output bone array
       pose_bone_array.length = data_bone_array.length;
 
       var bone;
@@ -1414,6 +1415,7 @@
         }
       };
 
+      // Update objects
       var data_object_array = mainline_keyframe.objects;
       var pose_object_array = sprAnim.objects;
 
@@ -1504,7 +1506,23 @@
 
         sprite.parent = sprAnim;
         sprAnim.children.push(sprite);
-      };
+      }
+
+      // Update events (eventlines)
+      var eventlines = anim.eventlines;
+      if (eventlines) {
+        var eventline, j, jlen, event;
+        for (i = 0, len = eventlines.length; i < len; i++) {
+          eventline = eventlines[i];
+          for (j = 0, jlen = eventline.keys.length; j < jlen; j++) {
+            event = eventline.keys[j];
+            // This key is between last frame and this frame
+            if (event.time <= time && event.time >= time - elapsed) {
+              this.emit('eventline', eventline.name);
+            }
+          }
+        }
+      }
     }
   };
 

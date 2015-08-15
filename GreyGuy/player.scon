@@ -3242,6 +3242,47 @@
 							}
 						]
 					},
+					"meta": {
+						"valline": [
+							{
+								"def": 0,
+								"id": 0,
+								"key": [
+									{
+										"id": 0,
+										"time": 4,
+										"val": ""
+									},
+									{
+										"id": 1,
+										"time": 984,
+										"val": "B"
+									},
+									{
+										"id": 2,
+										"time": 2183,
+										"val": "C"
+									},
+									{
+										"id": 3,
+										"time": 3174,
+										"val": "D"
+									}
+								]
+							},
+							{
+								"def": 1,
+								"id": 1,
+								"key": [
+									{
+										"id": 0,
+										"time": 4,
+										"val": 1234
+									}
+								]
+							}
+						]
+					},
 					"name": "idle",
 					"timeline": [
 						{
@@ -27519,6 +27560,20 @@
 					"name": "Player_p_foot_walk_a",
 					"realname": "p_foot_walk_a",
 					"type": "sprite"
+				}
+			],
+			"var_defs": [
+				{
+					"default": "A",
+					"id": 0,
+					"name": "myVar",
+					"type": "string"
+				},
+				{
+					"default": 1234,
+					"id": 1,
+					"name": "myInt",
+					"type": "int"
 				}
 			]
 		}

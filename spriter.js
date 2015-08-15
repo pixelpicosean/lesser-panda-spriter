@@ -14,33 +14,39 @@
 (function(spriter) { 'use strict';
 
   /**
-   * Stores animation data (scon objects)
-   * @type {Object}
+   * Spriter scon file loader and parser
    */
-  var scons = {};
+  function atlasParser() {
+    return function spriterLoader(res, next) {
+      if (res.url.match(/\.scon$/)) {
+        // Scon file already loaded
+        if (atlasParser[res.name]) {
+          return next();
+        }
 
-  function loaderMiddleWare(res, next) {
-    if (res.url.match(/\.scon$/)) {
-      // console.log('%s is scon', res.url);
-      var path = res.url.replace(/[^\/]*$/, '');
-      var atlasUrl = res.url.replace(/\.scon$/, '.json');
-      // console.log(atlasUrl);
-      PIXI.loader.add(atlasUrl);
+        // Create a data instance for this scon file
+        var scon = JSON.parse(res.data);
+        atlasParser[res.name] = new Data(scon);
 
-      var scon = JSON.parse(res.data);
-      scons[res.name] = new Data(scon);
-    }
-    next();
-  };
-
+        // Load related sprite atlas
+        var path = res.url.replace(/[^\/]*$/, '');
+        var atlasUrl = res.url.replace(/\.scon$/, '.json');
+        PIXI.loader.add(atlasUrl);
+      }
+      next();
+    };
+  }
   /**
    * Get the data object of a specific scon file asset key
    * @param  {String} sconKey Key of the scon file
    * @return {Data}   Data object created for the scon file
    */
   function getData(sconKey) {
-    return scons[sconKey];
+    return atlasParser[sconKey];
   };
+  // Add parser as PIXI loader middleware
+  PIXI.loaders.Loader.addPixiMiddleware(atlasParser);
+  PIXI.loader.use(atlasParser());
 
   /**
    * @constructor
@@ -1856,7 +1862,6 @@
   }
 
   // Export
-  spriter.loaderMiddleWare = loaderMiddleWare;
   spriter.getData = getData;
 
   spriter.SpriterAnimation = SpriterAnimation;

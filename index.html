@@ -13,7 +13,6 @@
   <script>
     PIXI.loader
       .add('player.scon', 'GreyGuy/player.scon')
-      .after(spriter.loaderMiddleWare)
       .once('complete', start)
       .load();
 

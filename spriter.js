@@ -1188,6 +1188,30 @@
     this.keys = this.keys.sort(Keyframe.compare);
   }
 
+  function TaglineKeyframe(tagDefs, json) {
+    this.id = loadInt(json, 'id', -1);
+    this.time = loadInt(json, 'time', 0);
+    this.tags = [];
+    var tag;
+    for (var i = 0; i < json.tag.length; i++) {
+      tag = json.tag[i];
+      // { id, tagName }
+      this.tags.push({
+        id: tag.id,
+        name: tagDefs[tag.t]
+      });
+    }
+  }
+
+  function Tagline(tagDefs, json) {
+    this.keys = [];
+
+    for (var i = 0, len = json.key.length; i < len; i++) {
+      this.keys.push(new TaglineKeyframe(tagDefs, json.key[i]));
+    }
+    this.keys = this.keys.sort(Keyframe.compare);
+  }
+
   /**
    * @constructor
    */
@@ -1252,10 +1276,17 @@
       }
     }
 
-    if (json.meta && json.meta.valline) {
-      this.vallines = [];
-      for (i = 0, len = json.meta.valline.length; i < len; i++) {
-        this.vallines.push(new Valline(this.entity.indexedVars, json.meta.valline[i]));
+    if (json.meta) {
+      // Value line
+      if (json.meta.valline) {
+        this.vallines = [];
+        for (i = 0, len = json.meta.valline.length; i < len; i++) {
+          this.vallines.push(new Valline(this.entity.indexedVars, json.meta.valline[i]));
+        }
+      }
+      // Tag line
+      if (json.meta.tagline) {
+        this.tagline = new Tagline(data.tagMap, json.meta.tagline);
       }
     }
 
@@ -1325,6 +1356,9 @@
     this.data = spriter.getData(sconKey);
     /** @type {Entity} */
     this.entity = this.data.getEntity(entityName);
+
+    /** @type {Array.<{tagID, tagName}>} Available tags */
+    this.tags = [];
 
     /** @type {Object.<String, Object>} tagged variables */
     this.vars = {};
@@ -1612,6 +1646,20 @@
         }
       }
 
+      // Update tags (tagline)
+      var tagline = anim.tagline;
+      if (tagline) {
+        var tag;
+        for (i = 0, len = tagline.keys.length; i < len; i++) {
+          tag = tagline.keys[i];
+          // This key is between last frame and this frame
+          if (tag.time <= time && tag.time >= time - elapsed) {
+            this.tags = tag.tags;
+            this.emit('tagline', tag.tags);
+          }
+        }
+      }
+
       // Update events (eventlines)
       var eventlines = anim.eventlines;
       if (eventlines) {
@@ -1646,8 +1694,11 @@
 
     /** @type {Object} entityName -> entity map */
     this.entityMap = {};
-    /** @type {Array.<String>} entity definiation names */
+    /** @type {Array.<String>} entity definiation names list */
     this.entityNames = [];
+
+    /** @type {Object} tagID -> tagName */
+    this.tagMap = {};
 
     /** Scon file version */
     this.sconVersion = loadString(scon, 'scon_version', '');
@@ -1660,6 +1711,13 @@
     // Fetch folder and file data
     for (i = 0, len = scon.folder.length; i < len; i++) {
       this.folder_array.push(new Folder().load(scon.folder[i]));
+    }
+
+    // Construct tag map
+    var tag;
+    for (i = 0, len = scon.tag_list.length; i < len; i++) {
+      tag = scon.tag_list[i];
+      this.tagMap[tag.id] = tag.name;
     }
 
     // Construct entity data map

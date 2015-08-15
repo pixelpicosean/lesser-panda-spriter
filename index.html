@@ -24,7 +24,7 @@
 
       // Create and init spriter object
       var player = new spriter.SpriterAnimation('player.scon', 'Player');
-      player.play('idle');
+      player.play('walk');
       player.position.set(300, 300);
       stage.addChild(player);
 
@@ -36,7 +36,12 @@
         console.log('value "%s" changed to: %s', valName, value);
       });
 
-      console.log(spriter.getData('player.scon').scon);
+      player.on('tagline', function(tags) {
+        console.log('tags changed', tags);
+      });
+
+      // console.log(spriter.getData('player.scon'));
+      // console.log(spriter.getData('player.scon').scon);
 
       var prevTime = 0;
       function render(time) {

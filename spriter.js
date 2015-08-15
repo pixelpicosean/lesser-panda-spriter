@@ -1152,10 +1152,41 @@
     this.keys = this.keys.sort(Keyframe.compare);
   }
 
+  function VallineKeyframe(type, json) {
+    this.id = loadInt(json, 'id', -1);
+    this.time = loadInt(json, 'time', 0);
+    switch (type) {
+      case 'float':
+        this.val = loadFloat(json, 'val', 0);
+        break;
+      case 'int':
+        this.val = loadInt(json, 'val', 0);
+        break;
+      case 'string':
+        this.val = loadString(json, 'val', '');
+        break;
+    }
+  }
+
+  function Valline(varDefs, json) {
+    this.id = loadInt(json, 'id', -1);
+    this.def = loadInt(json, 'def', -1);
+    this.name = varDefs[this.def].name;
+    this.keys = [];
+
+    var type = varDefs[this.def].type;
+
+    for (var i = 0, len = json.key.length; i < len; i++) {
+      this.keys.push(new VallineKeyframe(type, json.key[i]));
+    }
+    this.keys = this.keys.sort(Keyframe.compare);
+  }
+
   /**
    * @constructor
    */
-  function Animation() {
+  function Animation(ent) {
+    this.entity = ent;
     /** @type {number} */
     this.id = -1;
     /** @type {string} */
@@ -1175,6 +1206,11 @@
      * @optional
      */
     this.eventlines = null;
+    /**
+     * @type {Array.<Valline>}
+     * @optional
+     */
+    this.vallines = null;
     /** @type {number} */
     this.minTime = 0;
     /** @type {number} */
@@ -1210,10 +1246,34 @@
       }
     }
 
+    if (json.meta && json.meta.valline) {
+      this.vallines = [];
+      for (i = 0, len = json.meta.valline.length; i < len; i++) {
+        this.vallines.push(new Valline(this.entity.indexedVars, json.meta.valline[i]));
+      }
+    }
+
     this.minTime = 0;
     this.maxTime = this.length;
 
     return this;
+  }
+
+  function Variable(json) {
+    this.id = loadInt(json, 'id', -1);
+    this.name = loadString(json, 'name', '');
+    this.type = loadString(json, 'type', 'int');
+    switch (this.type) {
+      case 'float':
+        this.default = loadFloat(json, 'default', 0);
+        break;
+      case 'int':
+        this.default = loadInt(json, 'default', 0);
+        break;
+      case 'string':
+        this.default = loadString(json, 'default', '');
+        break;
+    }
   }
 
   function Entity(data, json) {
@@ -1225,10 +1285,21 @@
     this.anims = {};
     /** @type {Array.<string>} */
     this.animNames = [];
+    /** @type {Object.<string,Variable>} */
+    this.namedVars = {};
+    /** @type {Object.<int,Variable>} */
+    this.indexedVars = {};
+
+    // Create variables
+    for (var i = 0, len = json.var_defs.length; i < len; i++) {
+      var variable = new Variable(json.var_defs[i]);
+      this.namedVars[variable.name] = variable;
+      this.indexedVars[variable.id] = variable;
+    }
 
     // Create animations
     for (var i = 0, len = json.animation.length; i < len; i++) {
-      var animation = new Animation().load(data, json.animation[i]);
+      var animation = new Animation(this).load(data, json.animation[i]);
       this.anims[animation.name] = animation;
       this.animNames.push(animation.name);
     }
@@ -1248,6 +1319,16 @@
     this.data = spriter.getData(sconKey);
     /** @type {Entity} */
     this.entity = this.data.getEntity(entityName);
+
+    /** @type {Object.<String, Object>} tagged variables */
+    this.vars = {};
+
+    // Create variables with default value
+    var variable;
+    for (var k in this.entity.namedVars) {
+      variable = this.entity.namedVars[k];
+      this.vars[variable.name] = variable.default;
+    }
 
     /** @type {Array.<Bone>} */
     this.bones = [];
@@ -1506,6 +1587,23 @@
 
         sprite.parent = sprAnim;
         sprAnim.children.push(sprite);
+      }
+
+      // Update variables (valline)
+      var vallines = anim.vallines;
+      if (vallines) {
+        var valline, j, jlen, valKey;
+        for (i = 0, len = vallines.length; i < len; i++) {
+          valline = vallines[i];
+          for (j = 0, jlen = valline.keys.length; j < jlen; j++) {
+            valKey = valline.keys[j];
+            // This key is between last frame and this frame
+            if (valKey.time <= time && valKey.time >= time - elapsed) {
+              this.vars[valline.name] = valKey.val;
+              this.emit('valline', valline.name, valKey.val);
+            }
+          }
+        }
       }
 
       // Update events (eventlines)

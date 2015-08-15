@@ -23,26 +23,21 @@
       });
       var stage = new PIXI.Container();
 
-      // Create and init spriter objects
-      // var NUM_X = 20;
-      // var NUM_Y = 8;
-      var NUM_X = 16;
-      var NUM_Y = 8;
+      // Create and init spriter object
+      var player = new spriter.SpriterAnimation('player.scon', 'Player');
+      player.play('idle');
+      player.position.set(300, 300);
+      stage.addChild(player);
 
-      var i, j;
-      var obj, objects = [];
-      for (i = 0; i < NUM_X; i++) {
-        for (j = 0; j < NUM_Y; j++) {
-          obj = new spriter.SpriterAnimation('player.scon', 'Player');
-          obj.play('walk');
-          obj.setTime(i * 40);
-          obj.scale.set(0.2, -0.2);
-          obj.position.set(i * 30 + 10, 50 + j * 50);
-          stage.addChild(obj);
+      player.once('eventline', function(evt) {
+        console.log('eventline: %s', evt);
+      });
 
-          objects.push(obj);
-        }
-      }
+      player.on('valline', function(valName, value) {
+        console.log('value "%s" changed to: %s', valName, value);
+      });
+
+      console.log(spriter.getData('player.scon').scon);
 
       var prevTime = 0;
       function render(time) {
@@ -53,9 +48,7 @@
         prevTime = time;
 
         // Update animation
-        for (i = 0; i < NUM_X * NUM_Y; i++) {
-          objects[i].update(dt);
-        }
+        player.update(dt);
 
         renderer.render(stage);
       }

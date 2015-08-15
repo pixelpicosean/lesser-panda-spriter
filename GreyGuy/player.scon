@@ -9533,6 +9533,54 @@
 							}
 						]
 					},
+					"meta": {
+						"tagline": {
+							"key": [
+								{
+									"id": 0,
+									"tag": [
+										{
+											"id": 0,
+											"t": 2
+										},
+										{
+											"id": 1,
+											"t": 1
+										}
+									],
+									"time": 1
+								},
+								{
+									"id": 1,
+									"tag": [
+										{
+											"id": 0,
+											"t": 2
+										},
+										{
+											"id": 1,
+											"t": 0
+										}
+									],
+									"time": 373
+								},
+								{
+									"id": 2,
+									"tag": [
+										{
+											"id": 0,
+											"t": 2
+										},
+										{
+											"id": 1,
+											"t": 3
+										}
+									],
+									"time": 746
+								}
+							]
+						}
+					},
 					"name": "walk",
 					"timeline": [
 						{
@@ -28162,5 +28210,23 @@
 	],
 	"generator": "BrashMonkey Spriter",
 	"generator_version": "r4.1",
-	"scon_version": "1.0"
+	"scon_version": "1.0",
+	"tag_list": [
+		{
+			"id": 0,
+			"name": "blockable"
+		},
+		{
+			"id": 1,
+			"name": "jumpable"
+		},
+		{
+			"id": 2,
+			"name": "runable"
+		},
+		{
+			"id": 3,
+			"name": "attackable"
+		}
+	]
 }

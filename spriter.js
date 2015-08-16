@@ -1,6 +1,6 @@
 /**
- * Spriter plugin for LesserPanda
- * @version 0.0.1
+ * Spriter plugin for PIXI.js v3.x
+ * @version 0.1.0
  * @author Sean Bohan (pixelpicosean@gmail.com)
  *
  * Based on Spriter.js by:
@@ -1924,4 +1924,4 @@
 
   spriter.SpriterAnimation = SpriterAnimation;
 
-})(window.spriter = {});
+})(PIXI.spriter = {});

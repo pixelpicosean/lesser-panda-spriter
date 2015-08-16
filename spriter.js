@@ -1597,14 +1597,14 @@
         var bone = pose_bone_array[object.parentID];
         if (bone) {
           Transform.combine(bone.worldSpace, object.localSpace, object.worldSpace);
-          var folder = sprAnim.data.folder_array[object.folderID];
-          var file = folder.files[object.fileID];
-          var offset_x = (0.5 - object.pivot.x) * file.width;
-          var offset_y = (0.5 - object.pivot.y) * file.height;
-          Transform.translate(object.worldSpace, offset_x, offset_y);
         } else {
           object.worldSpace.copy(object.localSpace);
         }
+        var folder = sprAnim.data.folder_array[object.folderID];
+        var file = folder.files[object.fileID];
+        var offset_x = (0.5 - object.pivot.x) * file.width;
+        var offset_y = (0.5 - object.pivot.y) * file.height;
+        Transform.translate(object.worldSpace, offset_x, offset_y);
 
         // TODO: update object transform
         var timelineID = data_object_array[i].timelineID;
@@ -1899,12 +1899,21 @@
    * @param {number} spin
    */
   function tweenAngleRadians(a, b, t, spin) {
-    if ((spin > 0) && (a > b)) {
-      return a + ((b + 2 * Math.PI - a) * t); // counter clockwise
-    } else if ((spin < 0) && (a < b)) {
-      return a + ((b - 2 * Math.PI - a) * t); // clockwise
+    if (spin === 0) {
+      return a;
     }
-    return a + ((b - a) * t);
+    else if (spin > 0) {
+      if ((b - a) < 0) {
+        b += 2 * Math.PI;
+      }
+    }
+    else if (spin < 0) {
+      if ((b - a) > 0) {
+        b -= 2 * Math.PI;
+      }
+    }
+
+    return wrapAngleRadians(a + (wrapAngleRadians(b - a) * t));
   }
 
   /**

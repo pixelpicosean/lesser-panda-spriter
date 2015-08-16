@@ -23,7 +23,7 @@
       var stage = new PIXI.Container();
 
       // Create and init spriter object
-      var player = new spriter.SpriterAnimation('player.scon', 'Player');
+      var player = new PIXI.spriter.SpriterAnimation('player.scon', 'Player');
       player.play('walk');
       player.position.set(300, 300);
       stage.addChild(player);
@@ -40,8 +40,8 @@
         console.log('tags changed', tags);
       });
 
-      // console.log(spriter.getData('player.scon'));
-      // console.log(spriter.getData('player.scon').scon);
+      // console.log(PIXI.spriter.getData('player.scon'));
+      // console.log(PIXI.spriter.getData('player.scon').scon);
 
       var prevTime = 0;
       function render(time) {

@@ -1,17 +1,21 @@
 /**
- * Spriter plugin for LesserPanda
- * @version 0.0.1
+ * Spriter plugin for LesserPanda engine
+ * @version 0.1.0
  * @author Sean Bohan (pixelpicosean@gmail.com)
  *
  * Based on Spriter.js by:
  * - Jason Andersen jgandersen@gmail.com
  * - Isaac Burns isaacburns@gmail.com
  */
+game.module(
+  'plugins.spriter'
+)
+.require(
+  'engine.renderer'
+)
+.body(function() { 'use strict';
 
-/**
- * A JavaScript API for the Spriter SCON animation data format.
- */
-(function(spriter) { 'use strict';
+  var PIXI = game.PIXI;
 
   /**
    * Spriter scon file loader and parser
@@ -32,6 +36,7 @@
         var path = res.url.replace(/[^\/]*$/, '');
         var atlasUrl = res.url.replace(/\.scon$/, '.json');
         PIXI.loader.add(atlasUrl);
+        game._loader.assetQueue.push(atlasUrl);
       }
       next();
     };
@@ -42,7 +47,7 @@
    * @return {Data}   Data object created for the scon file
    */
   function getData(sconKey) {
-    return atlasParser[sconKey];
+    return atlasParser[game.paths[sconKey]];
   };
   // Add parser as PIXI loader middleware
   PIXI.loaders.Loader.addPixiMiddleware(atlasParser);
@@ -1349,11 +1354,11 @@
    * @constructor
    */
   function SpriterAnimation(sconKey, entityName) {
-    PIXI.Container.call(this);
+    game.Container.call(this);
     this.scale.y = -1; // FIXME: inverse the transform instead of set y scale
 
     /** @type {Data} */
-    this.data = spriter.getData(sconKey);
+    this.data = getData(sconKey);
     /** @type {Entity} */
     this.entity = this.data.getEntity(entityName);
 
@@ -1399,6 +1404,11 @@
 
   SpriterAnimation.prototype = Object.create(PIXI.Container.prototype);
   SpriterAnimation.prototype.constructor = SpriterAnimation;
+
+  SpriterAnimation.prototype.updateTransform = function() {
+    if (this.currAnimName !== '') this.updateAnimation();
+    game.Container.prototype.updateTransform.call(this);
+  };
 
   /**
    * Play an animation by its name
@@ -1453,7 +1463,9 @@
       this.dirty = true;
     }
   };
-  SpriterAnimation.prototype.update = function(elapsed) {
+  SpriterAnimation.prototype.updateAnimation = function() {
+    var elapsed = (game.system.delta * 1000) | 0;
+
     // Update timer
     this.setTime(this.time + elapsed);
 
@@ -1597,14 +1609,14 @@
         var bone = pose_bone_array[object.parentID];
         if (bone) {
           Transform.combine(bone.worldSpace, object.localSpace, object.worldSpace);
-          var folder = sprAnim.data.folder_array[object.folderID];
-          var file = folder.files[object.fileID];
-          var offset_x = (0.5 - object.pivot.x) * file.width;
-          var offset_y = (0.5 - object.pivot.y) * file.height;
-          Transform.translate(object.worldSpace, offset_x, offset_y);
         } else {
           object.worldSpace.copy(object.localSpace);
         }
+        var folder = sprAnim.data.folder_array[object.folderID];
+        var file = folder.files[object.fileID];
+        var offset_x = (0.5 - object.pivot.x) * file.width;
+        var offset_y = (0.5 - object.pivot.y) * file.height;
+        Transform.translate(object.worldSpace, offset_x, offset_y);
 
         // TODO: update object transform
         var timelineID = data_object_array[i].timelineID;
@@ -1613,7 +1625,7 @@
         var sprites = sprAnim.sprites;
         var sprite = sprites[timeline.name];
         if (!sprite) {
-          sprite = new PIXI.Sprite(getTextureForObject(sprAnim.data, timeline.keyframes[0].object));
+          sprite = new game.Sprite(getTextureForObject(sprAnim.data, timeline.keyframes[0].object));
           sprite.anchor.set(0.5, 0.5);
           sprite.name = timeline.name;
           sprites[timeline.name] = sprite;
@@ -1899,12 +1911,21 @@
    * @param {number} spin
    */
   function tweenAngleRadians(a, b, t, spin) {
-    if ((spin > 0) && (a > b)) {
-      return a + ((b + 2 * Math.PI - a) * t); // counter clockwise
-    } else if ((spin < 0) && (a < b)) {
-      return a + ((b - 2 * Math.PI - a) * t); // clockwise
+    if (spin === 0) {
+      return a;
     }
-    return a + ((b - a) * t);
+    else if (spin > 0) {
+      if ((b - a) < 0) {
+        b += 2 * Math.PI;
+      }
+    }
+    else if (spin < 0) {
+      if ((b - a) > 0) {
+        b -= 2 * Math.PI;
+      }
+    }
+
+    return wrapAngleRadians(a + (wrapAngleRadians(b - a) * t));
   }
 
   /**
@@ -1920,8 +1941,7 @@
   }
 
   // Export
-  spriter.getData = getData;
+  game.getSpriterData = getData;
+  game.SpriterAnimation = SpriterAnimation;
 
-  spriter.SpriterAnimation = SpriterAnimation;
-
-})(window.spriter = {});
+});

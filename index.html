@@ -1,64 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Spriter for LesserPanda</title>
+  <meta charset="utf-8">
+  <title>Spriter Demo</title>
+  <script type="text/javascript" src="src/engine/core.js"></script>
+  <script type="text/javascript" src="src/game/config.js"></script>
+  <script type="text/javascript" src="src/game/main.js"></script>
 </head>
 <body>
-  <script src="pixi.js"></script>
-  <script src="spriter.js"></script>
-
-  <canvas id="canvas"></canvas>
-
-  <script>
-    PIXI.loader
-      .add('player.scon', 'GreyGuy/player.scon')
-      .once('complete', start)
-      .load();
-
-    function start() {
-      var renderer = PIXI.autoDetectRenderer(600, 400, {
-        view: document.querySelector('#canvas')
-      });
-      var stage = new PIXI.Container();
-
-      // Create and init spriter object
-      var player = new spriter.SpriterAnimation('player.scon', 'Player');
-      player.play('walk');
-      player.position.set(300, 300);
-      stage.addChild(player);
-
-      player.once('eventline', function(evt) {
-        console.log('eventline: %s', evt);
-      });
-
-      player.on('valline', function(valName, value) {
-        console.log('value "%s" changed to: %s', valName, value);
-      });
-
-      player.on('tagline', function(tags) {
-        console.log('tags changed', tags);
-      });
-
-      // console.log(spriter.getData('player.scon'));
-      // console.log(spriter.getData('player.scon').scon);
-
-      var prevTime = 0;
-      function render(time) {
-        requestAnimationFrame(render);
-
-        // Delta time
-        var dt = time - (prevTime || time);
-        prevTime = time;
-
-        // Update animation
-        player.update(dt);
-
-        renderer.render(stage);
-      }
-
-      requestAnimationFrame(render);
-    }
-  </script>
 </body>
 </html>

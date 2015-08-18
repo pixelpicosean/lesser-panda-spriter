@@ -523,57 +523,37 @@ game.module(
   /**
    * @constructor
    */
-  function File() {
+  function File(json) {
     /** @type {number} */
-    this.id = -1;
-    /** @type {string} */
-    this.name = '';
-    /** @type {number} */
-    this.width = 0;
-    /** @type {number} */
-    this.height = 0;
-    /** @type {Vector} */
-    this.pivot = new Vector(0, 1);
-  }
-
-  /**
-   * @return {File}
-   * @param {Object.<string,?>} json
-   */
-  File.prototype.load = function(json) {
     this.id = loadInt(json, 'id', -1);
+    /** @type {string} */
     this.name = loadString(json, 'name', '');
+    /** @type {number} */
     this.width = loadInt(json, 'width', 0);
+    /** @type {number} */
     this.height = loadInt(json, 'height', 0);
-    this.pivot.x = loadFloat(json, 'pivot_x', 0);
-    this.pivot.y = loadFloat(json, 'pivot_y', 1);
-    return this;
+    /** @type {Vector} */
+    this.pivot = new Vector(
+      loadFloat(json, 'pivot_x', 0),
+      loadFloat(json, 'pivot_y', 1)
+    );
   }
 
   /**
    * @constructor
    */
-  function Folder() {
+  function Folder(json) {
     /** @type {number} */
-    this.id = -1;
+    this.id = loadInt(json, 'id', -1);
     /** @type {Array.<File>} */
     this.files = [];
-  }
 
-  /**
-   * @return {Folder}
-   * @param {Object.<string,?>} json
-   */
-  Folder.prototype.load = function(json) {
-    this.id = loadInt(json, 'id', -1);
-    this.files.length = 0;
     json.file = makeArray(json.file);
     var file;
     for (var i = 0; i < json.file.length; i++) {
       file = json.file[i];
-      this.files.push(new File().load(file));
+      this.files.push(new File(file));
     }
-    return this;
   }
 
   /**
@@ -581,25 +561,16 @@ game.module(
    */
   function Bone() {
     /** @type {number} */
-    this.id = -1;
+    this.id = loadInt(json, 'id', -1);
     /** @type {number} */
-    this.parentID = -1;
+    this.parentID = loadInt(json, 'parent', -1);
     /** @type {Transform} */
     this.localSpace = new Transform();
     /** @type {Transform} */
     this.worldSpace = new Transform();
-  }
 
-  /**
-   * @return {Bone}
-   * @param {Object.<string,?>} json
-   */
-  Bone.prototype.load = function(json) {
-    this.id = loadInt(json, 'id', -1);
-    this.parentID = loadInt(json, 'parent', -1);
     this.localSpace.load(json);
     this.worldSpace.copy(this.localSpace);
-    return this;
   }
 
   /**
@@ -1612,7 +1583,7 @@ game.module(
         } else {
           object.worldSpace.copy(object.localSpace);
         }
-        var folder = sprAnim.data.folder_array[object.folderID];
+        var folder = sprAnim.data.folders[object.folderID];
         var file = folder.files[object.fileID];
         var offset_x = (0.5 - object.pivot.x) * file.width;
         var offset_y = (0.5 - object.pivot.y) * file.height;
@@ -1702,7 +1673,7 @@ game.module(
     this.scon = scon;
 
     /** @type {Array.<Folder>} */
-    this.folder_array = [];
+    this.folders = [];
 
     /** @type {Object} entityName -> entity map */
     this.entityMap = {};
@@ -1722,7 +1693,7 @@ game.module(
     var i, len;
     // Fetch folder and file data
     for (i = 0, len = scon.folder.length; i < len; i++) {
-      this.folder_array.push(new Folder().load(scon.folder[i]));
+      this.folders.push(new Folder(scon.folder[i]));
     }
 
     // Construct tag map
@@ -1743,7 +1714,7 @@ game.module(
   }
 
   Data.prototype.getFile = function(folderIdx, fileIdx) {
-    return this.folder_array[folderIdx].files[fileIdx];
+    return this.folders[folderIdx].files[fileIdx];
   };
 
   /**
@@ -1935,7 +1906,7 @@ game.module(
    * @return {PIXI.Texture}
    */
   function getTextureForObject(data, object) {
-    var folder = data.folder_array[object.folderID];
+    var folder = data.folders[object.folderID];
     var file = folder.files[object.fileID];
     return PIXI.utils.TextureCache[file.name];
   }

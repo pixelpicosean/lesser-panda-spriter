@@ -584,6 +584,8 @@ game.module(
 
     this.localSpace.load(json);
     this.worldSpace.copy(this.localSpace);
+
+    return this;
   };
 
   /**

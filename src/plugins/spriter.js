@@ -561,17 +561,23 @@ game.module(
    */
   function Bone() {
     /** @type {number} */
-    this.id = loadInt(json, 'id', -1);
+    this.id = -1;
     /** @type {number} */
-    this.parentID = loadInt(json, 'parent', -1);
+    this.parentID = -1;
     /** @type {Transform} */
     this.localSpace = new Transform();
     /** @type {Transform} */
     this.worldSpace = new Transform();
+  }
+  Bone.prototype.load = function(json) {
+    this.id = loadInt(json, 'id', -1);
+    this.parentID = loadInt(json, 'parent', -1);
 
     this.localSpace.load(json);
     this.worldSpace.copy(this.localSpace);
-  }
+
+    return this;
+  };
 
   /**
    * @return {Bone}

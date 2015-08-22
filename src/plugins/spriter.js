@@ -527,44 +527,6 @@ game.module(
   /**
    * @constructor
    */
-  function File(json) {
-    /** @type {number} */
-    this.id = loadInt(json, 'id', -1);
-    /** @type {string} */
-    this.name = loadString(json, 'name', '');
-    /** @type {number} */
-    this.width = loadInt(json, 'width', 0);
-    /** @type {number} */
-    this.height = loadInt(json, 'height', 0);
-    /** @type {Vector} */
-    this.pivot = new Vector(
-      loadFloat(json, 'pivot_x', 0),
-      loadFloat(json, 'pivot_y', 1)
-    );
-    /** @type {PIXI.Texture} Texture for this file */
-    this.texture = PIXI.utils.TextureCache[this.name];
-  }
-
-  /**
-   * @constructor
-   */
-  function Folder(json) {
-    /** @type {number} */
-    this.id = loadInt(json, 'id', -1);
-    /** @type {Array.<File>} */
-    this.files = [];
-
-    json.file = makeArray(json.file);
-    var file;
-    for (var i = 0; i < json.file.length; i++) {
-      file = json.file[i];
-      this.files.push(new File(file));
-    }
-  }
-
-  /**
-   * @constructor
-   */
   function Bone() {
     /** @type {number} */
     this.id = -1;
@@ -726,8 +688,7 @@ game.module(
       this.pivot.y = loadFloat(json, 'pivot_y', 1);
     } else {
       this.defaultPivot = true;
-      var file = data.getFile(this.folderID, this.fileID);
-      this.pivot.copy(file.pivot);
+      this.pivot.copy(data.getFilePivot(this.folderID, this.fileID));
     }
     this.zIndex = loadInt(json, 'zIndex', 0);
     this.alpha = loadFloat(json, 'a', 1);
@@ -1596,10 +1557,9 @@ game.module(
         } else {
           object.worldSpace.copy(object.localSpace);
         }
-        var folder = sprAnim.data.folders[object.folderID];
-        var file = folder.files[object.fileID];
-        var offset_x = (0.5 - object.pivot.x) * file.width;
-        var offset_y = (0.5 - object.pivot.y) * file.height;
+        var texture = sprAnim.data.getFileTexture(object.folderID, object.fileID);
+        var offset_x = (0.5 - object.pivot.x) * texture.width;
+        var offset_y = (0.5 - object.pivot.y) * texture.height;
         Transform.translate(object.worldSpace, offset_x, offset_y);
 
         // TODO: update object transform
@@ -1609,7 +1569,8 @@ game.module(
         var sprites = sprAnim.sprites;
         var sprite = sprites[timeline.name];
         if (!sprite) {
-          sprite = new game.Sprite(getTextureForObject(sprAnim.data, timeline.keyframes[0].object));
+          var obj = timeline.keyframes[0].object;
+          sprite = new game.Sprite(sprAnim.data.getFileTexture(obj.folderID, obj.fileID));
           sprite.anchor.set(0.5, 0.5);
           sprite.name = timeline.name;
           sprites[timeline.name] = sprite;
@@ -1685,8 +1646,8 @@ game.module(
      */
     this.scon = scon;
 
-    /** @type {Array.<Folder>} */
-    this.folders = [];
+    /** @type {Array.<Array.<PIXI.Texture>>} textures[folderID][fileID] */
+    this.textures = [];
 
     /** @type {Object} entityName -> entity map */
     this.entityMap = {};
@@ -1703,10 +1664,20 @@ game.module(
     /** Scon file generator application version */
     this.generatorVersion = loadString(scon, 'generator_version', '');
 
-    var i, len;
+    var i, len, j, jlen, folder, files, file, texture;
     // Fetch folder and file data
     for (i = 0, len = scon.folder.length; i < len; i++) {
-      this.folders.push(new Folder(scon.folder[i]));
+      folder = scon.folder[i];
+      files = [];
+
+      for (j = 0, jlen = folder.file.length; j < jlen; j++) {
+        file = folder.file[j];
+        texture = PIXI.utils.TextureCache[file.name];
+        texture.pivot = new Vector(file.pivot_x || 0, file.pivot_y || 1);
+        files.push(texture);
+      }
+
+      this.textures.push(files);
     }
 
     // Construct tag map
@@ -1726,8 +1697,12 @@ game.module(
     }
   }
 
-  Data.prototype.getFile = function(folderIdx, fileIdx) {
-    return this.folders[folderIdx].files[fileIdx];
+  Data.prototype.getFilePivot = function(folderIdx, fileIdx) {
+    return this.textures[folderIdx][fileIdx].pivot;
+  };
+
+  Data.prototype.getFileTexture = function(folderIdx, fileIdx) {
+    return this.textures[folderIdx][fileIdx];
   };
 
   /**
@@ -1910,16 +1885,6 @@ game.module(
     }
 
     return wrapAngleRadians(a + (wrapAngleRadians(b - a) * t));
-  }
-
-  /**
-   * Get texture for a Object instance
-   * @param  {Data} data      Spriter data instance
-   * @param  {Object} object  Texture for this object
-   * @return {PIXI.Texture}
-   */
-  function getTextureForObject(data, object) {
-    return data.folders[object.folderID].files[object.fileID].texture;
   }
 
   // Export

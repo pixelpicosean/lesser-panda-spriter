@@ -28,14 +28,22 @@ game.module(
           return next();
         }
 
-        // Create a data instance for this scon file
         var scon = JSON.parse(res.data);
-        atlasParser[res.name] = new Data(scon);
 
         // Load related sprite atlas
         var path = res.url.replace(/[^\/]*$/, '');
         var atlasUrl = res.url.replace(/\.scon$/, '.json');
-        PIXI.loader.add(atlasUrl);
+        PIXI.loader.add({
+          url: atlasUrl,
+          onComplete: function() {
+            // Create data object after related atlas is loaded
+            atlasParser[res.name] = new Data(scon);
+            console.log(getTextureForObject(atlasParser[res.name], {
+              folderID: 0,
+              fileID: 0,
+            }));
+          }
+        });
         game._loader.assetQueue.push(atlasUrl);
       }
       next();
@@ -561,17 +569,22 @@ game.module(
    */
   function Bone() {
     /** @type {number} */
-    this.id = loadInt(json, 'id', -1);
+    this.id = -1;
     /** @type {number} */
-    this.parentID = loadInt(json, 'parent', -1);
+    this.parentID = -1;
     /** @type {Transform} */
     this.localSpace = new Transform();
     /** @type {Transform} */
     this.worldSpace = new Transform();
+  }
+
+  Bone.prototype.load = function(json) {
+    this.id = loadInt(json, 'id', -1);
+    this.parentID = loadInt(json, 'parent', -1);
 
     this.localSpace.load(json);
     this.worldSpace.copy(this.localSpace);
-  }
+  };
 
   /**
    * @return {Bone}

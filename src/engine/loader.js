@@ -61,7 +61,6 @@ game.module(
 
       if (this.assetQueue.length > 0) {
         this.loader = game.PIXI.loader.add(this.assetQueue);
-        console.log(this.assetQueue);
         this.loader.on('progress', this.progress, this);
         this.loader.on('complete', this.loadAudio, this);
         this.loader.on('error', this.error, this);

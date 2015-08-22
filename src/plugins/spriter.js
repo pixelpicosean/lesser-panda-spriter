@@ -38,10 +38,6 @@ game.module(
           onComplete: function() {
             // Create data object after related atlas is loaded
             atlasParser[res.name] = new Data(scon);
-            console.log(getTextureForObject(atlasParser[res.name], {
-              folderID: 0,
-              fileID: 0,
-            }));
           }
         });
         game._loader.assetQueue.push(atlasUrl);
@@ -545,6 +541,8 @@ game.module(
       loadFloat(json, 'pivot_x', 0),
       loadFloat(json, 'pivot_y', 1)
     );
+    /** @type {PIXI.Texture} Texture for this file */
+    this.texture = PIXI.utils.TextureCache[this.name];
   }
 
   /**
@@ -1921,9 +1919,7 @@ game.module(
    * @return {PIXI.Texture}
    */
   function getTextureForObject(data, object) {
-    var folder = data.folders[object.folderID];
-    var file = folder.files[object.fileID];
-    return PIXI.utils.TextureCache[file.name];
+    return data.folders[object.folderID].files[object.fileID].texture;
   }
 
   // Export

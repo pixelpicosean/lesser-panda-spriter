@@ -1,21 +1,32 @@
-game.module(
-  'game.main'
-)
-.require(
-  'plugins.spriter'
-)
-.body(function() { 'use strict';
+import engine from 'engine/core';
+import Scene from 'engine/scene';
+import PIXI from 'engine/pixi';
+import loader from 'engine/loader';
 
-  game.addAsset('GreyGuy/player.scon', 'player');
+import 'game/loading';
 
-  game.createScene('Main', {
-    backgroundColor: 0xb9bec7,
+import * as spriter from 'plugins/spriter';
 
-    init: function() {
-      var player = new game.SpriterAnimation('player', 'Player').addTo(this.stage);
-      player.position.set(300, 300);
-      player.play('walk');
-    }
-  });
+// Load textures
+loader.addAsset('GreyGuy/player.scon', 'player');
 
-});
+class Main extends Scene {
+  constructor() {
+    super();
+
+    let player = new spriter.SpriterAnimation('player', 'Player')
+      .addTo(this.stage);
+    player.position.set(engine.width * 0.5, engine.height - 40);
+    player.play('walk');
+    player.scale.set(0.5, -0.5);
+
+    this.addObject(player);
+  }
+  awake() {
+  }
+  update() {
+  }
+};
+engine.addScene('Main', Main);
+
+engine.startWithScene('Loading');

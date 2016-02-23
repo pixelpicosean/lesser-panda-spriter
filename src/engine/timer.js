@@ -1,149 +1,268 @@
+var Scene = require('engine/scene');
+var utils = require('engine/utils');
+
 /**
-  @module timer
+  @class Timer
+  @constructor
+  @param {Number} [ms]
 **/
-game.module(
-  'engine.timer'
-)
-.body(function() { 'use strict';
+function Timer(ms) {
+  /**
+   * @property {Number} _count
+   * @private
+   */
+  this._count = 0;
 
   /**
-    @class Timer
-    @constructor
-    @param {Number} [ms]
-  **/
-  game.createClass('Timer', {
-    /**
-      Timer's target time.
-      @property {Number} target
-    **/
-    target: 0,
-    /**
-      Timer's base time.
-      @property {Number} base
-    **/
-    base: 0,
-    /**
-      @property {Number} _last
-      @private
-    **/
-    _last: 0,
-    /**
-      @property {Number} _pauseTime
-      @private
-    **/
-    _pauseTime: 0,
+   * Duration of this timer
+   * @property {Number} duration
+   */
+  this.duration = 0;
 
-    init: function(ms) {
-      this._last = game.Timer.time;
-      this.set(ms);
-    },
+  /**
+   * Whether this timer should repeat
+   * @type {Boolean}
+   */
+  this.repeat = false;
 
-    /**
-      Set time for timer.
-      @method set
-      @param {Number} ms
-    **/
-    set: function(ms) {
-      if (typeof ms !== 'number') ms = 0;
-      this.target = ms;
+  /**
+   * Whether this timer is already removed
+   * @type {Boolean}
+   */
+  this.removed = false;
+
+  this.callback = null;
+  this.callbackCtx = null;
+
+  this.set(ms);
+}
+
+/**
+ * Set duration for timer.
+ * @param {Number} ms
+ * @chainable
+ */
+Timer.prototype.set = function set(ms) {
+  if (typeof ms !== 'number') {
+    this.duration = 0;
+  }
+  else {
+    this.duration = ms;
+  }
+  return this.reset();
+};
+
+/**
+ * Reset timer to current duration.
+ * @method reset
+ * @chainable
+ */
+Timer.prototype.reset = function reset() {
+  this.removed = false;
+  this._count = this.duration;
+  return this;
+};
+
+/**
+ * Pause timer.
+ * @method pause
+ * @chainable
+ */
+Timer.prototype.pause = function pause() {
+  this.paused = true;
+  return this;
+};
+
+/**
+ * Resume paused timer.
+ * @method resume
+ * @chainable
+ */
+Timer.prototype.resume = function resume() {
+  this.paused = false;
+  return this;
+};
+
+Timer.prototype.update = function update(delta) {
+  if (this.removed || this.paused) return;
+
+  this._count -= delta;
+  if (this._count < 0) {
+    this._count = 0;
+
+    if (typeof this.callback === 'function') {
+      this.callback.call(this.callbackCtx);
+    }
+
+    if (this.repeat) {
       this.reset();
-    },
+    }
+    else {
+      this.removed = true;
+    }
+  }
+};
 
-    /**
-      Reset timer.
-      @method reset
-    **/
-    reset: function() {
-      this.base = game.Timer.time;
-      this._pauseTime = 0;
-    },
+/**
+ * @property {Number} elapsed Time elapsed since start.
+ */
+Object.defineProperty(Timer.prototype, 'elapsed', {
+  get: function() {
+    return this.duration - this._count;
+  },
+});
 
-    /**
-      Get time since last delta.
-      @method delta
-      @return {Number} delta
-    **/
-    delta: function() {
-      var delta = game.Timer.time - this._last;
-      this._last = game.Timer.time;
-      return this._pauseTime ? 0 : delta;
-    },
+/**
+ * @property {Number} left Time left till the end.
+ */
+Object.defineProperty(Timer.prototype, 'left', {
+  get: function() {
+    return this._count;
+  },
+});
 
-    /**
-      Get time since start.
-      @method time
-      @return {Number} time
-    **/
-    time: function() {
-      var time = (this._pauseTime || game.Timer.time) - this.base - this.target;
-      return time;
-    },
+// Pool timer instances
+var pool = [];
+function createTimer(ms) {
+  var t = pool.pop();
+  if (!t) {
+    t = new Timer(ms);
+  }
+  else {
+    Timer.call(t, ms);
+  }
+  return t;
+}
+function recycleTimer(timer) {
+  pool.push(timer);
+}
 
-    /**
-      Pause timer.
-      @method pause
-    **/
-    pause: function() {
-      if (!this._pauseTime) this._pauseTime = game.Timer.time;
-    },
+// Timer static properties and functions
+Object.assign(Timer, {
+  /**
+   * Delta since last frame (ms).
+   * @attribute {Number} delta
+   */
+  delta: 0,
+  /**
+   * Map of timers
+   * @type {Object}
+   */
+  timers: {
+    '0': [],
+  },
+  activeTags: ['0'],
+  deactiveTags: [],
+  /**
+   * Update timer system.
+   * @attribute {Number} update
+   */
+  update: function update(delta) {
+    this.delta = delta;
 
-    /**
-      Resume paused timer.
-      @method resume
-    **/
-    resume: function() {
-      if (this._pauseTime) {
-        this.base += game.Timer.time - this._pauseTime;
-        this._pauseTime = 0;
+    var i, key, timers;
+    for (key in this.timers) {
+      if (this.activeTags.indexOf(key) < 0) continue;
+
+      timers = this.timers[key];
+      for (i = 0; i < timers.length; i++) {
+        if (!timers[i].removed) {
+          timers[i].update(delta);
+        }
+        if (timers[i].removed) {
+          recycleTimer(timers[i]);
+          utils.removeItems(timers, i--, 1);
+        }
       }
     }
-  });
+  },
 
-  game.addAttributes('Timer', {
-    /**
-      Current time.
-      @attribute {Number} time
-    **/
-    time: 0,
-    /**
-      Main timer's speed factor.
-      @attribute {Number} speed
-      @default 1
-    **/
-    speed: 1,
-    /**
-      Main timer's minimum fps.
-      @attribute {Number} minFPS
-      @default 20
-    **/
-    minFPS: 20,
-    /**
-      Main timer's delta (ms).
-      @attribute {Number} delta
-    **/
-    delta: 0,
-    /**
-      @attribute {Number} _last
-      @private
-    **/
-    _last: 0,
-    /**
-      @attribute {Number} _realDelta
-      @private
-    **/
-    _realDelta: 0,
-    /**
-      Update main timer.
-      @attribute {Function} update
-    **/
-    update: function() {
-      var now = Date.now();
-      if (!this._last) this._last = now;
-      this._realDelta = now - this._last;
-      this.delta = Math.min(this._realDelta, 1000 / this.minFPS) * this.speed;
-      this.time += this.delta;
-      this._last = now;
+  /**
+   * Create a not repeat timer.
+   * @param {Number} wait        Time in milliseconds
+   * @param {Function}  callback  Callback function to run, when timer ends
+   * @param {Object}    context   Context of the callback to be invoked
+   * @param {String}    tag       Tag of this timer, default is '0'
+   * @return {Timer}
+   */
+  later: function later(wait, callback, context, tag) {
+    var t = tag || '0';
+    var timer = createTimer(wait);
+
+    timer.repeat = false;
+    timer.callback = callback;
+    timer.callbackCtx = context;
+
+    if (!this.timers[t]) {
+      // Create a new timer list
+      this.timers[t] = [];
+
+      // Active new tag by default
+      this.activeTags.push(t);
     }
-  });
 
+    if (this.timers[t].indexOf(timer) < 0) {
+      this.timers[t].push(timer);
+    }
+
+    return timer;
+  },
+
+  /**
+   * Create a repeat timer.
+   * @param {Number} interval    Time in milliseconds
+   * @param {Function}  callback  Callback function to run, when timer ends
+   * @param {Object}    context   Context of the callback to be invoked
+   * @param {String}    tag       Tag of this timer, default is '0'
+   * @return {Timer}
+   */
+  interval: function interval(interval, callback, context, tag) {
+    var t = tag || '0';
+    var timer = createTimer(interval);
+
+    timer.repeat = true;
+    timer.callback = callback;
+    timer.callbackCtx = context;
+
+    if (!this.timers[t]) {
+      // Create a new timer list
+      this.timers[t] = [];
+
+      // Active new tag by default
+      this.activeTags.push(t);
+    }
+
+    if (this.timers[t].indexOf(timer) < 0) {
+      this.timers[t].push(timer);
+    }
+
+    return timer;
+  },
+  /**
+   * Remove a timer.
+   * @param {Timer} timer
+   */
+  remove: function remove(timer) {
+    if (timer) timer.removed = true;
+  },
+
+  pauseTimersTagged: function pauseTimersTagged(tag) {
+    if (this.timers[tag]) {
+      utils.removeItems(this.activeTags, this.activeTags.indexOf(tag), 1);
+      this.deactiveTags.push(tag);
+    }
+
+    return this;
+  },
+
+  resumeTimersTagged: function resumeTimersTagged(tag) {
+    if (this.timers[tag]) {
+      utils.removeItems(this.deactiveTags, this.deactiveTags.indexOf(tag), 1);
+      this.activeTags.push(tag);
+    }
+
+    return this;
+  },
 });
+
+module.exports = Timer;

@@ -20,7 +20,7 @@ class Main extends Scene {
     player.play('walk');
     player.scale.set(0.5, -0.5);
 
-    this.addObject(player);
+    window.p = player;
   }
   awake() {
   }

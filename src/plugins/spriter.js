@@ -1860,6 +1860,104 @@ function interpolateQuadratic(a, b, c, t) {
 function interpolateCubic(a, b, c, d, t) {
   return interpolateLinear(interpolateQuadratic(a, b, c, t), interpolateQuadratic(b, c, d, t), t);
 }
+/**
+ * @return {number}
+ * @param {number} a
+ * @param {number} b
+ * @param {number} c
+ * @param {number} d
+ * @param {number} e
+ * @param {number} t
+ */
+function interpolateQuartic(a, b, c, d, e, t) {
+  return interpolateLinear(interpolateCubic(a, b, c, d, t), interpolateCubic(b, c, d, e, t), t);
+}
+/**
+ * @return {number}
+ * @param {number} a
+ * @param {number} b
+ * @param {number} c
+ * @param {number} d
+ * @param {number} e
+ * @param {number} f
+ * @param {number} t
+ */
+function interpolateQuintic(a, b, c, d, e, f, t) {
+  return interpolateLinear(interpolateQuartic(a, b, c, d, e, t), interpolateQuartic(b, c, d, e, f, t), t);
+}
+/**
+ * @return {number}
+ * @param {number} x1
+ * @param {number} y1
+ * @param {number} x2
+ * @param {number} y2
+ * @param {number} t
+ */
+function interpolateBezier(x1, y1, x2, y2, t) {
+  function SampleCurve(a, b, c, t) {
+    return ((a * t + b) * t + c) * t;
+  }
+
+  function SampleCurveDerivativeX(ax, bx, cx, t) {
+    return (3.0 * ax * t + 2.0 * bx) * t + cx;
+  }
+
+  function SolveEpsilon(duration) {
+    return 1.0 / (200.0 * duration);
+  }
+
+  function Solve(ax, bx, cx, ay, by, cy, x, epsilon) {
+    return SampleCurve(ay, by, cy, SolveCurveX(ax, bx, cx, x, epsilon));
+  }
+
+  function SolveCurveX(ax, bx, cx, x, epsilon) {
+    var t0;
+    var t1;
+    var t2;
+    var x2;
+    var d2;
+    var i;
+
+    // First try a few iterations of Newton's method -- normally very fast.
+    for (t2 = x, i = 0; i < 8; i++) {
+      x2 = SampleCurve(ax, bx, cx, t2) - x;
+      if (Math.abs(x2) < epsilon) return t2;
+
+      d2 = SampleCurveDerivativeX(ax, bx, cx, t2);
+      if (Math.abs(d2) < epsilon) break;
+
+      t2 = t2 - x2 / d2;
+    }
+
+    // Fall back to the bisection method for reliability.
+    t0 = 0.0;
+    t1 = 1.0;
+    t2 = x;
+
+    if (t2 < t0) return t0;
+    if (t2 > t1) return t1;
+
+    while (t0 < t1) {
+      x2 = SampleCurve(ax, bx, cx, t2);
+      if (Math.abs(x2 - x) < epsilon) return t2;
+      if (x > x2) t0 = t2;
+      else t1 = t2;
+      t2 = (t1 - t0) * 0.5 + t0;
+    }
+
+    return t2; // Failure.
+  }
+
+  var duration = 1;
+  var cx = 3.0 * x1;
+  var bx = 3.0 * (x2 - x1) - cx;
+  var ax = 1.0 - cx - bx;
+  var cy = 3.0 * y1;
+  var by = 3.0 * (y2 - y1) - cy;
+  var ay = 1.0 - cy - by;
+
+  return Solve(ax, bx, cx, ay, by, cy, t, SolveEpsilon(duration));
+}
 
 /**
  * @return {number}

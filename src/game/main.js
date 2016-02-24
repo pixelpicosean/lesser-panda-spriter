@@ -5,7 +5,7 @@ import loader from 'engine/loader';
 
 import 'game/loading';
 
-import * as spriter from 'plugins/spriter';
+import SpriterAnimation from 'plugins/spriter';
 
 // Load textures
 loader.addAsset('GreyGuy/player.scon', 'player');
@@ -14,7 +14,7 @@ class Main extends Scene {
   constructor() {
     super();
 
-    let player = new spriter.SpriterAnimation('player', 'Player')
+    let player = new SpriterAnimation('player', 'Player')
       .addTo(this.stage);
     player.position.set(engine.width * 0.5, engine.height - 40);
     player.play('walk');

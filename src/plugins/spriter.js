@@ -898,6 +898,8 @@ function MainlineKeyframe() {
   this.bones = null;
   /** @type {Array.<Object|ObjRef>} */
   this.objects = null;
+
+  this.curve = new Curve();
 }
 
 MainlineKeyframe.prototype = Object.create(Keyframe.prototype);
@@ -972,12 +974,8 @@ function TimelineKeyframe(type = 'unknown') {
   this.type = type;
   /** @type {number} */
   this.spin = 1; // 1: counter-clockwise, -1: clockwise
-  /** @type {number} */
-  this.curve = 1; // 0: instant, 1: linear, 2: quadratic, 3: cubic
-  /** @type {number} */
-  this.c1 = 0;
-  /** @type {number} */
-  this.c2 = 0;
+  /** @type {Curve} */
+  this.curve = new Curve();
 }
 
 TimelineKeyframe.prototype = Object.create(Keyframe.prototype);
@@ -990,9 +988,7 @@ TimelineKeyframe.prototype.constructor = TimelineKeyframe;
 TimelineKeyframe.prototype.load = function(json) {
   Keyframe.prototype.load.call(this, json);
   this.spin = loadInt(json, 'spin', 1);
-  this.curve = loadInt(json, 'curve_type', 1);
-  this.c1 = loadInt(json, 'c1', 0);
-  this.c2 = loadInt(json, 'c2', 0);
+  this.curve.load(json);
   return this;
 }
 
@@ -1519,7 +1515,21 @@ SpriterAnimation.prototype.updateAnimation = function() {
   if (anim) {
     var mainline_keyframe_array = anim.mainline.keyframes;
     var mainline_keyframe_index = Keyframe.find(mainline_keyframe_array, time);
+    var mainline_keyframe_index2 = (mainline_keyframe_index + 1) % mainline_keyframe_array.length;
     var mainline_keyframe = mainline_keyframe_array[mainline_keyframe_index];
+    var mainline_keyframe2 = mainline_keyframe_array[mainline_keyframe_index2];
+
+    var mainline_time1 = mainline_keyframe.time;
+    var mainline_time2 = mainline_keyframe2.time;
+    if (mainline_time2 < mainline_time1) {
+      mainline_time2 = anim.length;
+    }
+    var mainline_time = time;
+    if (mainline_time1 !== mainline_time2) {
+      var mainline_tween = (time - mainline_time1) / (mainline_time2 - mainline_time1);
+      mainline_tween = mainline_keyframe.curve.evaluate(mainline_tween);
+      mainline_time = tween(mainline_time1, mainline_time2, mainline_tween);
+    }
 
     var timelines = anim.timelines;
 
@@ -1530,32 +1540,31 @@ SpriterAnimation.prototype.updateAnimation = function() {
     var data_bone;
     for (i = 0, len = data_bone_array.length; i < len; i++) {
       data_bone = data_bone_array[i];
-      var pose_bone = pose_bone_array[i] = (pose_bone_array[i] || new Bone());
 
       var timelineID = data_bone.timelineID;
-      var keyframeID = data_bone.keyframeID;
       var timeline = timelines[timelineID];
       var timeline_keyframe_array = timeline.keyframes;
+      var keyframeID = data_bone.keyframeID;
+      var keyframeID2 = (keyframeID + 1) % timeline_keyframe_array.length;
       var timeline_keyframe = timeline_keyframe_array[keyframeID];
+      var timeline_keyframe2 = timeline_keyframe_array[keyframeID2];
 
       var time1 = timeline_keyframe.time;
-      var bone1 = timeline_keyframe.bone;
-      pose_bone.copy(bone1);
-      pose_bone.parentID = data_bone.parentID; // set parent from bone_ref
-
-      // see if there's something to tween with
-      var keyframe_index2 = (keyframeID + 1) % timeline_keyframe_array.length;
-      if (keyframeID !== keyframe_index2) {
-        var timeline_keyframe2 = timeline_keyframe_array[keyframe_index2];
-        var time2 = timeline_keyframe2.time;
-        if (time2 < time1) {
-          time2 = anim.length;
-        }
-        var bone2 = timeline_keyframe2.bone;
-
-        var tween = timeline_keyframe.evaluateCurve(time, time1, time2);
-        pose_bone.tween(bone2, tween, timeline_keyframe.spin);
+      var time2 = timeline_keyframe2.time;
+      if (time2 < time1) {
+        time2 = anim.length;
       }
+
+      var _tween = 0;
+      if (time1 !== time2) {
+        _tween = (mainline_time - time1) / (time2 - time1);
+        _tween = timeline_keyframe.curve.evaluate(_tween);
+      }
+
+      var pose_bone = pose_bone_array[i] = (pose_bone_array[i] || new Bone());
+      pose_bone.copy(timeline_keyframe.bone).tween(timeline_keyframe2.bone, _tween, timeline_keyframe.spin);
+      pose_bone.name = timeline.name;
+      pose_bone.parentID = data_bone.parentID;
     };
 
     // Clamp output bone array
@@ -1582,30 +1591,28 @@ SpriterAnimation.prototype.updateAnimation = function() {
       var pose_object = pose_object_array[i] = (pose_object_array[i] || new Obj());
 
       var timelineID = data_object.timelineID;
-      var keyframeID = data_object.keyframeID;
       var timeline = timelines[timelineID];
       var timeline_keyframe_array = timeline.keyframes;
+      var keyframeID = data_object.keyframeID;
+      var keyframeID2 = (keyframeID + 1) % timeline_keyframe_array.length;
       var timeline_keyframe = timeline_keyframe_array[keyframeID];
+      var timeline_keyframe2 = timeline_keyframe_array[keyframeID2];
 
       var time1 = timeline_keyframe.time;
-      var object1 = timeline_keyframe.object;
-
-      pose_object.copy(object1);
-      pose_object.parentID = data_object.parentID; // set parent from object_ref
-
-      // see if there's something to tween with
-      var keyframe_index2 = (keyframeID + 1) % timeline_keyframe_array.length;
-      if (keyframeID !== keyframe_index2) {
-        var timeline_keyframe2 = timeline_keyframe_array[keyframe_index2];
-        var time2 = timeline_keyframe2.time;
-        if (time2 < time1) {
-          time2 = anim.length;
-        }
-        var object2 = timeline_keyframe2.object;
-
-        var tween = timeline_keyframe.evaluateCurve(time, time1, time2);
-        pose_object.tween(object2, tween, timeline_keyframe.spin);
+      var time2 = timeline_keyframe2.time;
+      if (time2 < time1) {
+        time2 = anim.length;
       }
+      var _tween = 0;
+      if (time1 !== time2) {
+        _tween = (mainline_time - time1) / (time2 - time1);
+        _tween = timeline_keyframe.curve.evaluate(_tween);
+      }
+
+      // switch (timeline.type) {
+      //   case 'sprite':
+
+      // }
     };
 
     // Clamp output object array

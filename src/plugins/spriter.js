@@ -1336,6 +1336,9 @@ function SpriterAnimation(sconKey, entityName) {
   /** @type {boolean} */
   this.dirty = true;
 
+  /** @type {Boolean} Whether this object is in the PIXI updating list */
+  this._willTick = false;
+
   /**
    * Stores all the sprite instances for this entity
    * @type {PIXI.Sprite}
@@ -1368,6 +1371,23 @@ SpriterAnimation.prototype.play = function(anim, stopAtEnd) {
 
   this.elapsedTime = 0;
   this.dirty = true;
+
+  // Request updates
+  if (!this._willTick) {
+    this._willTick = true;
+    PIXI.addObject(this);
+  }
+};
+SpriterAnimation.prototype.stop = function() {
+  this.isEnd = true;
+
+  // No more updates
+  if (this._willTick) {
+    this._willTick = false;
+    core.removeObject(this);
+  }
+
+  return this;
 };
 /**
  * Get current animation object
@@ -1387,8 +1407,14 @@ SpriterAnimation.prototype.setTime = function(time) {
       if (this.stopAtEnd) {
         time = anim.maxTime;
         if (!this.isEnd) {
+          // Mark as ended
           this.isEnd = true;
-          this.emit('end', this.currAnimName);
+          // Remove from the updating list
+          if (this._willTick) {
+            this._willTick = false;
+            core.removeObject(this);
+          }
+          this.emit('finish', this.currAnimName);
         }
       }
       else {

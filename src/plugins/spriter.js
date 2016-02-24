@@ -1532,37 +1532,29 @@ SpriterAnimation.prototype.updateAnimation = function() {
       data_bone = data_bone_array[i];
       var pose_bone = pose_bone_array[i] = (pose_bone_array[i] || new Bone());
 
-      if (data_bone instanceof BoneRef) {
-        // bone is a BoneRef, dereference
-        var timelineID = data_bone.timelineID;
-        var keyframeID = data_bone.keyframeID;
-        var timeline = timelines[timelineID];
-        var timeline_keyframe_array = timeline.keyframes;
-        var timeline_keyframe = timeline_keyframe_array[keyframeID];
+      var timelineID = data_bone.timelineID;
+      var keyframeID = data_bone.keyframeID;
+      var timeline = timelines[timelineID];
+      var timeline_keyframe_array = timeline.keyframes;
+      var timeline_keyframe = timeline_keyframe_array[keyframeID];
 
-        var time1 = timeline_keyframe.time;
-        var bone1 = timeline_keyframe.bone;
-        pose_bone.copy(bone1);
-        pose_bone.parentID = data_bone.parentID; // set parent from bone_ref
+      var time1 = timeline_keyframe.time;
+      var bone1 = timeline_keyframe.bone;
+      pose_bone.copy(bone1);
+      pose_bone.parentID = data_bone.parentID; // set parent from bone_ref
 
-        // see if there's something to tween with
-        var keyframe_index2 = (keyframeID + 1) % timeline_keyframe_array.length;
-        if (keyframeID !== keyframe_index2) {
-          var timeline_keyframe2 = timeline_keyframe_array[keyframe_index2];
-          var time2 = timeline_keyframe2.time;
-          if (time2 < time1) {
-            time2 = anim.length;
-          }
-          var bone2 = timeline_keyframe2.bone;
-
-          var tween = timeline_keyframe.evaluateCurve(time, time1, time2);
-          pose_bone.tween(bone2, tween, timeline_keyframe.spin);
+      // see if there's something to tween with
+      var keyframe_index2 = (keyframeID + 1) % timeline_keyframe_array.length;
+      if (keyframeID !== keyframe_index2) {
+        var timeline_keyframe2 = timeline_keyframe_array[keyframe_index2];
+        var time2 = timeline_keyframe2.time;
+        if (time2 < time1) {
+          time2 = anim.length;
         }
-      } else if (data_bone instanceof Bone) {
-        // bone is a Bone, copy
-        pose_bone.copy(data_bone);
-      } else {
-        throw new Error();
+        var bone2 = timeline_keyframe2.bone;
+
+        var tween = timeline_keyframe.evaluateCurve(time, time1, time2);
+        pose_bone.tween(bone2, tween, timeline_keyframe.spin);
       }
     };
 
@@ -1589,38 +1581,30 @@ SpriterAnimation.prototype.updateAnimation = function() {
       data_object = data_object_array[i];
       var pose_object = pose_object_array[i] = (pose_object_array[i] || new Obj());
 
-      if (data_object instanceof ObjRef) {
-        // object is a ObjRef, dereference
-        var timelineID = data_object.timelineID;
-        var keyframeID = data_object.keyframeID;
-        var timeline = timelines[timelineID];
-        var timeline_keyframe_array = timeline.keyframes;
-        var timeline_keyframe = timeline_keyframe_array[keyframeID];
+      var timelineID = data_object.timelineID;
+      var keyframeID = data_object.keyframeID;
+      var timeline = timelines[timelineID];
+      var timeline_keyframe_array = timeline.keyframes;
+      var timeline_keyframe = timeline_keyframe_array[keyframeID];
 
-        var time1 = timeline_keyframe.time;
-        var object1 = timeline_keyframe.object;
+      var time1 = timeline_keyframe.time;
+      var object1 = timeline_keyframe.object;
 
-        pose_object.copy(object1);
-        pose_object.parentID = data_object.parentID; // set parent from object_ref
+      pose_object.copy(object1);
+      pose_object.parentID = data_object.parentID; // set parent from object_ref
 
-        // see if there's something to tween with
-        var keyframe_index2 = (keyframeID + 1) % timeline_keyframe_array.length;
-        if (keyframeID !== keyframe_index2) {
-          var timeline_keyframe2 = timeline_keyframe_array[keyframe_index2];
-          var time2 = timeline_keyframe2.time;
-          if (time2 < time1) {
-            time2 = anim.length;
-          }
-          var object2 = timeline_keyframe2.object;
-
-          var tween = timeline_keyframe.evaluateCurve(time, time1, time2);
-          pose_object.tween(object2, tween, timeline_keyframe.spin);
+      // see if there's something to tween with
+      var keyframe_index2 = (keyframeID + 1) % timeline_keyframe_array.length;
+      if (keyframeID !== keyframe_index2) {
+        var timeline_keyframe2 = timeline_keyframe_array[keyframe_index2];
+        var time2 = timeline_keyframe2.time;
+        if (time2 < time1) {
+          time2 = anim.length;
         }
-      } else if (data_object instanceof Object) {
-        // object is a Object, copy
-        pose_object.copy(data_object);
-      } else {
-        throw new Error();
+        var object2 = timeline_keyframe2.object;
+
+        var tween = timeline_keyframe.evaluateCurve(time, time1, time2);
+        pose_object.tween(object2, tween, timeline_keyframe.spin);
       }
     };
 

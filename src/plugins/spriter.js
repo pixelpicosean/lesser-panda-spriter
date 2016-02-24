@@ -23,11 +23,11 @@ function atlasParser() {
         return next();
       }
 
-      var scon = JSON.parse(res.data);
+      let scon = JSON.parse(res.data);
 
       // Load related sprite atlas
-      var path = res.url.replace(/[^\/]*$/, '');
-      var atlasUrl = res.url
+      let path = res.url.replace(/[^\/]*$/, '');
+      let atlasUrl = res.url
         .replace(`${loader.baseURL}/`, '')
         .replace(/\.scon$/, '.json');
       loader.addAsset(atlasUrl, undefined, {
@@ -286,10 +286,10 @@ class Transform {
     return out;
   }
   /**
-   * @return {Transform}
    * @param {Transform} space
    * @param {number} x
    * @param {number} y
+   * @return {Transform}
    */
   static translate(space, x, y) {
     x *= space.scale.x;
@@ -305,9 +305,9 @@ class Transform {
   }
 
   /**
-   * @return {Transform}
    * @param {Transform} space
    * @param {number} rad
+   * @return {Transform}
    */
   static rotate(space, rad) {
     space.rotation.rad = wrapAngleRadians(space.rotation.rad + rad);
@@ -315,10 +315,10 @@ class Transform {
   }
 
   /**
-   * @return {Transform}
    * @param {Transform} space
    * @param {number} x
    * @param {number} y
+   * @return {Transform}
    */
   static scale(space, x, y) {
     space.scale.x *= x;
@@ -327,9 +327,9 @@ class Transform {
   }
 
   /**
-   * @return {Transform}
    * @param {Transform} space
    * @param {Transform=} out
+   * @return {Transform}
    */
   static invert(space, out = new Transform()) {
     // invert
@@ -358,10 +358,10 @@ class Transform {
   }
 
   /**
-   * @return {Transform}
    * @param {Transform} a
    * @param {Transform} b
    * @param {Transform=} out
+   * @return {Transform}
    */
   static combine(a, b, out = new Transform()) {
     // combine
@@ -389,10 +389,10 @@ class Transform {
   }
 
   /**
-   * @return {Transform}
    * @param {Transform} ab
    * @param {Transform} a
    * @param {Transform=} out
+   * @return {Transform}
    */
   static extract(ab, a, out = new Transform()) {
     // extract
@@ -420,10 +420,10 @@ class Transform {
   }
 
   /**
-   * @return {Vector}
    * @param {Transform} space
    * @param {Vector} v
    * @param {Vector=} out
+   * @return {Vector}
    */
   static transform(space, v, out = new Vector()) {
     let x = v.x * space.scale.x;
@@ -439,10 +439,10 @@ class Transform {
   }
 
   /**
-   * @return {Vector}
    * @param {Transform} space
    * @param {Vector} v
    * @param {Vector=} out
+   * @return {Vector}
    */
   static untransform(space, v, out = new Vector()) {
     let x = v.x - space.position.x;
@@ -458,12 +458,12 @@ class Transform {
   }
 
   /**
-   * @return {Transform}
    * @param {Transform} a
    * @param {Transform} b
    * @param {number} tween
    * @param {number} spin
    * @param {Transform=} out
+   * @return {Transform}
    */
   static tween(a, b, twn, spin, out) {
     out.position.x = tween(a.position.x, b.position.x, twn);
@@ -475,212 +475,206 @@ class Transform {
   }
 }
 
-/**
- * @constructor
- */
-function Bone() {
-  /** @type {number} */
-  this.id = -1;
-  /** @type {String} */
-  this.type = 'bone';
-  /** @type {number} */
-  this.parentID = -1;
-  /** @type {Transform} */
-  this.localSpace = new Transform();
-  /** @type {Transform} */
-  this.worldSpace = new Transform();
-}
-
-Bone.prototype.load = function(json) {
-  this.id = loadInt(json, 'id', -1);
-  this.parentID = loadInt(json, 'parent', -1);
-
-  this.localSpace.load(json);
-  this.worldSpace.copy(this.localSpace);
-
-  return this;
-};
-
-/**
- * @return {Bone}
- * @param {Bone} other
- */
-Bone.prototype.copy = function(other) {
-  this.parentID = other.parentID;
-  this.localSpace.copy(other.localSpace);
-  this.worldSpace.copy(other.worldSpace);
-  return this;
-}
-
-/**
- * @return {void}
- * @param {Bone} other
- * @param {number} tween
- * @param {number} spin
- */
-Bone.prototype.tween = function(other, tween, spin) {
-  Transform.tween(this.localSpace, other.localSpace, tween, spin, this.localSpace);
-}
-
-/**
- * @constructor
- */
-function BoneRef() {
-  /** @type {number} */
-  this.id = -1;
-  /** @type {number} */
-  this.parentID = -1;
-  /** @type {number} */
-  this.timelineID = -1;
-  /** @type {number} */
-  this.keyframeID = -1;
-}
-
-/**
- * @return {BoneRef}
- * @param {Object.<string,?>} json
- */
-BoneRef.prototype.load = function(json) {
-  this.id = loadInt(json, 'id', -1);
-  this.parentID = loadInt(json, 'parent', -1);
-  this.timelineID = loadInt(json, 'timeline', -1);
-  this.keyframeID = loadInt(json, 'key', -1);
-  return this;
-}
-
-/**
- * @return {BoneRef}
- * @param {BoneRef} other
- */
-BoneRef.prototype.copy = function(other) {
-  this.id = other.id;
-  this.parentID = other.parentID;
-  this.timelineID = other.timelineID;
-  this.keyframeID = other.keyframeID;
-  return this;
-}
-
-/**
- * @constructor
- */
-function Obj() {
-  /** @type {number} */
-  this.id = -1;
-  /** @type {String} */
-  this.type = 'sprite';
-  /** @type {number} */
-  this.parentID = -1;
-  /** @type {number} */
-  this.folderID = -1;
-  /** @type {number} */
-  this.fileID = -1;
-  /** @type {Transform} */
-  this.localSpace = new Transform();
-  /** @type {Transform} */
-  this.worldSpace = new Transform();
-  /** @type {boolean} */
-  this.defaultPivot = false;
-  /** @type {Vector} */
-  this.pivot = new Vector(0, 1);
-  /** @type {number} */
-  this.zIndex = 0;
-  /** @type {number} */
-  this.alpha = 1;
-}
-
-/**
- * @return {Obj}
- * @param {Object.<string,?>} json
- */
-Obj.prototype.load = function(data, json) {
-  this.id = loadInt(json, 'id', -1);
-  this.parentID = loadInt(json, 'parent', -1);
-  this.folderID = loadInt(json, 'folder', -1);
-  this.fileID = loadInt(json, 'file', -1);
-  this.localSpace.load(json);
-  this.worldSpace.copy(this.localSpace);
-  if ((typeof(json['pivot_x']) !== 'undefined') ||
-    (typeof(json['pivot_y']) !== 'undefined')) {
-    this.pivot.x = loadFloat(json, 'pivot_x', 0);
-    this.pivot.y = loadFloat(json, 'pivot_y', 1);
-  } else {
-    this.defaultPivot = true;
-    this.pivot.copy(data.getFilePivot(this.folderID, this.fileID));
+class Bone {
+  constructor() {
+    /** @type {number} */
+    this.id = -1;
+    /** @type {String} */
+    this.type = 'bone';
+    /** @type {number} */
+    this.parentID = -1;
+    /** @type {Transform} */
+    this.localSpace = new Transform();
+    /** @type {Transform} */
+    this.worldSpace = new Transform();
   }
-  this.zIndex = loadInt(json, 'zIndex', 0);
-  this.alpha = loadFloat(json, 'a', 1);
-  return this;
+
+  load(json) {
+    this.id = loadInt(json, 'id', -1);
+    this.parentID = loadInt(json, 'parent', -1);
+
+    this.localSpace.load(json);
+    this.worldSpace.copy(this.localSpace);
+
+    return this;
+  }
+
+  /**
+   * @param {Bone} other
+   * @return {Bone}
+   */
+  copy(other) {
+    this.parentID = other.parentID;
+    this.localSpace.copy(other.localSpace);
+    this.worldSpace.copy(other.worldSpace);
+    return this;
+  }
+
+  /**
+   * @param {Bone} other
+   * @param {number} tween
+   * @param {number} spin
+   * @return {void}
+   */
+  tween(other, tween, spin) {
+    Transform.tween(this.localSpace, other.localSpace, tween, spin, this.localSpace);
+  }
 }
 
-/**
- * @return {Obj}
- * @param {Obj} other
- */
-Obj.prototype.copy = function(other) {
-  this.parentID = other.parentID;
-  this.folderID = other.folderID;
-  this.fileID = other.fileID;
-  this.localSpace.copy(other.localSpace);
-  this.worldSpace.copy(other.worldSpace);
-  this.defaultPivot = other.defaultPivot;
-  this.pivot.copy(other.pivot);
-  this.zIndex = other.zIndex;
-  this.alpha = other.alpha;
-  return this;
+class BoneRef {
+  constructor() {
+    /** @type {number} */
+    this.id = -1;
+    /** @type {number} */
+    this.parentID = -1;
+    /** @type {number} */
+    this.timelineID = -1;
+    /** @type {number} */
+    this.keyframeID = -1;
+  }
+
+  /**
+   * @param {Object.<string,?>} json
+   * @return {BoneRef}
+   */
+  load(json) {
+    this.id = loadInt(json, 'id', -1);
+    this.parentID = loadInt(json, 'parent', -1);
+    this.timelineID = loadInt(json, 'timeline', -1);
+    this.keyframeID = loadInt(json, 'key', -1);
+    return this;
+  }
+
+  /**
+   * @param {BoneRef} other
+   * @return {BoneRef}
+   */
+  copy(other) {
+    this.id = other.id;
+    this.parentID = other.parentID;
+    this.timelineID = other.timelineID;
+    this.keyframeID = other.keyframeID;
+    return this;
+  }
 }
 
-/**
- * @return {void}
- * @param {Obj} other
- * @param {number} twn
- * @param {number} spin
- */
-Obj.prototype.tween = function(other, twn, spin) {
-  Transform.tween(this.localSpace, other.localSpace, twn, spin, this.localSpace);
-  // Vector.tween(this.pivot, other.pivot, twn, this.pivot);
-  this.alpha = tween(this.alpha, other.alpha, twn);
+class SpriteObject {
+  constructor() {
+    /** @type {number} */
+    this.id = -1;
+    /** @type {String} */
+    this.type = 'sprite';
+    /** @type {number} */
+    this.parentID = -1;
+    /** @type {number} */
+    this.folderID = -1;
+    /** @type {number} */
+    this.fileID = -1;
+    /** @type {Transform} */
+    this.localSpace = new Transform();
+    /** @type {Transform} */
+    this.worldSpace = new Transform();
+    /** @type {boolean} */
+    this.defaultPivot = false;
+    /** @type {Vector} */
+    this.pivot = new Vector(0, 1);
+    /** @type {number} */
+    this.zIndex = 0;
+    /** @type {number} */
+    this.alpha = 1;
+  }
+
+  /**
+   * @param {Object.<string,?>} json
+   * @return {SpriteObject}
+   */
+  load(data, json) {
+    this.id = loadInt(json, 'id', -1);
+    this.parentID = loadInt(json, 'parent', -1);
+    this.folderID = loadInt(json, 'folder', -1);
+    this.fileID = loadInt(json, 'file', -1);
+    this.localSpace.load(json);
+    this.worldSpace.copy(this.localSpace);
+    if ((typeof(json['pivot_x']) !== 'undefined') ||
+      (typeof(json['pivot_y']) !== 'undefined')) {
+      this.pivot.x = loadFloat(json, 'pivot_x', 0);
+      this.pivot.y = loadFloat(json, 'pivot_y', 1);
+    } else {
+      this.defaultPivot = true;
+      this.pivot.copy(data.getFilePivot(this.folderID, this.fileID));
+    }
+    this.zIndex = loadInt(json, 'zIndex', 0);
+    this.alpha = loadFloat(json, 'a', 1);
+    return this;
+  }
+
+  /**
+   * @param {SpriteObject} other
+   * @return {SpriteObject}
+   */
+  copy(other) {
+    this.parentID = other.parentID;
+    this.folderID = other.folderID;
+    this.fileID = other.fileID;
+    this.localSpace.copy(other.localSpace);
+    this.worldSpace.copy(other.worldSpace);
+    this.defaultPivot = other.defaultPivot;
+    this.pivot.copy(other.pivot);
+    this.zIndex = other.zIndex;
+    this.alpha = other.alpha;
+    return this;
+  }
+
+  /**
+   * @param {SpriteObject} other
+   * @param {number} twn
+   * @param {number} spin
+   */
+  tween(other, twn, spin) {
+    Transform.tween(this.localSpace, other.localSpace, twn, spin, this.localSpace);
+    this.alpha = tween(this.alpha, other.alpha, twn);
+  }
 }
 
-/**
- * @constructor
- */
-function ObjRef() {
-  /** @type {number} */
-  this.id = -1;
-  /** @type {number} */
-  this.parentID = -1;
-  /** @type {number} */
-  this.timelineID = -1;
-  /** @type {number} */
-  this.keyframeID = -1;
-  /** @type {number} */
-  this.zIndex = 0;
-}
+class ObjRef {
+  constructor() {
+    /** @type {number} */
+    this.id = -1;
+    /** @type {number} */
+    this.parentID = -1;
+    /** @type {number} */
+    this.timelineID = -1;
+    /** @type {number} */
+    this.keyframeID = -1;
+    /** @type {number} */
+    this.zIndex = 0;
+  }
 
-/**
- * @return {ObjRef}
- * @param {Object.<string,?>} json
- */
-ObjRef.prototype.load = function(json) {
-  this.id = loadInt(json, 'id', -1);
-  this.parentID = loadInt(json, 'parent', -1);
-  this.timelineID = loadInt(json, 'timeline', -1);
-  this.keyframeID = loadInt(json, 'key', -1);
-  this.zIndex = loadInt(json, 'zIndex', 0);
-  return this;
-}
+  /**
+   * @param {Object.<string,?>} json
+   * @return {ObjRef}
+   */
+  load(json) {
+    this.id = loadInt(json, 'id', -1);
+    this.parentID = loadInt(json, 'parent', -1);
+    this.timelineID = loadInt(json, 'timeline', -1);
+    this.keyframeID = loadInt(json, 'key', -1);
+    this.zIndex = loadInt(json, 'zIndex', 0);
+    return this;
+  }
 
-/**
- * @return {ObjRef}
- * @param {ObjRef} other
- */
-ObjRef.prototype.copy = function(other) {
-  this.id = other.id;
-  this.parentID = other.parentID;
-  this.timelineID = other.timelineID;
-  this.keyframeID = other.keyframeID;
-  this.zIndex = other.zIndex;
-  return this;
+  /**
+   * @param {ObjRef} other
+   * @return {ObjRef}
+   */
+  copy(other) {
+    this.id = other.id;
+    this.parentID = other.parentID;
+    this.timelineID = other.timelineID;
+    this.keyframeID = other.keyframeID;
+    this.zIndex = other.zIndex;
+    return this;
+  }
 }
 
 class BoxObject {
@@ -693,8 +687,8 @@ class BoxObject {
   }
 
   /**
-   * @return {BoxObject}
    * @param {Object.<string,?>} json
+   * @return {BoxObject}
    */
   load(json) {
     this.parentID = loadInt(json, 'parent', -1);
@@ -706,8 +700,8 @@ class BoxObject {
   }
 
   /**
-   * @return {BoxObject}
    * @param {BoxObject} other
+   * @return {BoxObject}
    */
   copy(other) {
     this.parentID = other.parentID;
@@ -736,8 +730,8 @@ class PointObject {
   }
 
   /**
-   * @return {PointObject}
    * @param {Object.<string,?>} json
+   * @return {PointObject}
    */
   load(json) {
     this.parentID = loadInt(json, 'parent', -1);
@@ -747,8 +741,8 @@ class PointObject {
   }
 
   /**
-   * @return {PointObject}
    * @param {PointObject} other
+   * @return {PointObject}
    */
   copy(other) {
     this.parentID = other.parentID;
@@ -767,238 +761,210 @@ class PointObject {
   }
 }
 
-class Curve {
+class Keyframe {
   constructor() {
-    this.type = 'linear';
-    this.c1 = 0.0;
-    this.c2 = 0.0;
-    this.c3 = 0.0;
-    this.c4 = 0.0;
+    /** @type {number} */
+    this.id = -1;
+    /** @type {number} */
+    this.time = 0;
   }
+
   /**
-   * @return {Curve}
    * @param {Object.<string,?>} json
+   * @return {Keyframe}
    */
   load(json) {
-    this.type = loadString(json, 'curve_type', 'linear');
-    this.c1 = loadFloat(json, 'c1', 0.0);
-    this.c2 = loadFloat(json, 'c2', 0.0);
-    this.c3 = loadFloat(json, 'c3', 0.0);
-    this.c4 = loadFloat(json, 'c4', 0.0);
+    this.id = loadInt(json, 'id', -1);
+    this.time = loadInt(json, 'time', 0);
     return this;
   }
-  evaluate(t) {
-    switch (this.type) {
-      case 'instant':
-        return 0.0;
-      case 'linear':
+
+  /**
+   * @param {Array.<Keyframe>} array
+   * @param {number} time
+   * @return {number}
+   */
+  static find(array, time) {
+    if (array.length <= 0) {
+      return -1;
+    }
+    if (time < array[0].time) {
+      return -1;
+    }
+    let last = array.length - 1;
+    if (time >= array[last].time) {
+      return last;
+    }
+    let lo = 0;
+    let hi = last;
+    if (hi === 0) {
+      return 0;
+    }
+    let current = hi >> 1;
+    while (true) {
+      if (array[current + 1].time <= time) {
+        lo = current + 1;
+      } else {
+        hi = current;
+      }
+      if (lo === hi) {
+        return lo;
+      }
+      current = (lo + hi) >> 1;
+    }
+  }
+
+  /**
+   * @param {Keyframe} a
+   * @param {Keyframe} b
+   * @return {number}
+   */
+  static compare(a, b) {
+    return a.time - b.time;
+  }
+}
+
+class MainlineKeyframe extends Keyframe {
+  constructor() {
+    super();
+
+    /** @type {Array.<Bone|BoneRef>} */
+    this.bones = null;
+    /** @type {Array.<Object|ObjRef>} */
+    this.objects = null;
+  }
+
+  /**
+   * @param {Object.<string,?>} json
+   * @return {MainlineKeyframe}
+   */
+  load(data, json) {
+    super.load(json);
+
+    let i, len;
+
+    // combine bones and bone_refs into one array and sort by id
+    this.bones = [];
+
+    json.bone_ref = makeArray(json.bone_ref);
+    for (i = 0, len = json.bone_ref.length; i < len; i++) {
+      this.bones.push(new BoneRef().load(json.bone_ref[i]));
+    }
+
+    this.bones = this.bones.sort(function(a, b) {
+      return a.id - b.id;
+    });
+
+    // combine objects and object_refs into one array and sort by id
+    this.objects = [];
+
+    json.object_ref = makeArray(json.object_ref);
+    for (i = 0, len = json.object_ref.length; i < len; i++) {
+      this.objects.push(new ObjRef().load(json.object_ref[i]));
+    }
+
+    this.objects = this.objects.sort(function(a, b) {
+      return a.id - b.id;
+    });
+
+    return this;
+  }
+}
+
+class Mainline {
+  constructor() {
+    /** @type {Array.<MainlineKeyframe>} */
+    this.keyframes = [];
+  }
+
+  /**
+   * @param {Object.<string,?>} json
+   * @return {Mainline}
+   */
+  load(data, json) {
+    json.key = makeArray(json.key);
+    for (let i = 0, len = json.key.length; i < len; i++) {
+      this.keyframes.push(new MainlineKeyframe().load(data, json.key[i]));
+    }
+    this.keyframes = this.keyframes.sort(Keyframe.compare);
+    return this;
+  }
+}
+
+class TimelineKeyframe extends Keyframe {
+  constructor(type = 'unknown') {
+    super();
+
+    /** @type {string} */
+    this.type = type;
+    /** @type {number} */
+    this.spin = 1; // 1: counter-clockwise, -1: clockwise
+    /**
+     * Curve types
+     * value:
+     *   0: instant
+     *   1: linear
+     *   2: quadratic
+     *   3: cubic
+     *   4: quartic
+     *   5: quintic
+     *   6: bezier
+     * @type {number}
+     */
+    this.curve = 1;
+    /** @type {number} */
+    this.c1 = 0;
+    /** @type {number} */
+    this.c2 = 0;
+    /** @type {number} */
+    this.c3 = 0;
+    /** @type {number} */
+    this.c4 = 0;
+  }
+
+  /**
+   * @param {Object.<string,?>} json
+   * @return {TimelineKeyframe}
+   */
+  load(json) {
+    super.load(json);
+    this.spin = loadInt(json, 'spin', 1);
+    this.curve = loadInt(json, 'curve_type', 1);
+    this.c1 = loadInt(json, 'c1', 0);
+    this.c2 = loadInt(json, 'c2', 0);
+    this.c3 = loadInt(json, 'c3', 0);
+    this.c4 = loadInt(json, 'c4', 0);
+    return this;
+  }
+
+  evaluateCurve(time, time1, time2) {
+    if (time1 === time2) return 0;
+    let t = (time - time1) / (time2 - time1);
+    switch (this.curve) {
+      // instant
+      case 0:
+        return 0;
+      // linear
+      case 1:
         return t;
-      case 'quadratic':
+      // quadratic
+      case 2:
         return interpolateQuadratic(0.0, this.c1, 1.0, t);
-      case 'cubic':
+      // cubic
+      case 3:
         return interpolateCubic(0.0, this.c1, this.c2, 1.0, t);
-      case 'quartic':
+      // quartic
+      case 4:
         return interpolateQuartic(0.0, this.c1, this.c2, this.c3, 1.0, t);
-      case 'quintic':
+      // quintic
+      case 5:
         return interpolateQuintic(0.0, this.c1, this.c2, this.c3, this.c4, 1.0, t);
-      case 'bezier':
+      // bezier
+      case 6:
         return interpolateBezier(this.c1, this.c2, this.c3, this.c4, t);
     }
-    return 0.0;
-  }
-}
-
-/**
- * @constructor
- */
-function Keyframe() {
-  /** @type {number} */
-  this.id = -1;
-  /** @type {number} */
-  this.time = 0;
-}
-
-/**
- * @return {Keyframe}
- * @param {Object.<string,?>} json
- */
-Keyframe.prototype.load = function(json) {
-  this.id = loadInt(json, 'id', -1);
-  this.time = loadInt(json, 'time', 0);
-  return this;
-}
-
-/**
- * @return {number}
- * @param {Array.<Keyframe>} array
- * @param {number} time
- */
-Keyframe.find = function(array, time) {
-  if (array.length <= 0) {
-    return -1;
-  }
-  if (time < array[0].time) {
-    return -1;
-  }
-  var last = array.length - 1;
-  if (time >= array[last].time) {
-    return last;
-  }
-  var lo = 0;
-  var hi = last;
-  if (hi === 0) {
     return 0;
   }
-  var current = hi >> 1;
-  while (true) {
-    if (array[current + 1].time <= time) {
-      lo = current + 1;
-    } else {
-      hi = current;
-    }
-    if (lo === hi) {
-      return lo;
-    }
-    current = (lo + hi) >> 1;
-  }
-}
-
-/**
- * @return {number}
- * @param {Keyframe} a
- * @param {Keyframe} b
- */
-Keyframe.compare = function(a, b) {
-  return a.time - b.time;
-}
-
-/**
- * @constructor
- * @extends {Keyframe}
- */
-function MainlineKeyframe() {
-  Keyframe.call(this);
-
-  /** @type {Array.<Bone|BoneRef>} */
-  this.bones = null;
-  /** @type {Array.<Object|ObjRef>} */
-  this.objects = null;
-}
-
-MainlineKeyframe.prototype = Object.create(Keyframe.prototype);
-MainlineKeyframe.prototype.constructor = MainlineKeyframe;
-
-/**
- * @return {MainlineKeyframe}
- * @param {Object.<string,?>} json
- */
-MainlineKeyframe.prototype.load = function(data, json) {
-  var i, len;
-
-  Keyframe.prototype.load.call(this, json)
-
-  // combine bones and bone_refs into one array and sort by id
-  this.bones = [];
-
-  json.bone_ref = makeArray(json.bone_ref);
-  for (i = 0, len = json.bone_ref.length; i < len; i++) {
-    this.bones.push(new BoneRef().load(json.bone_ref[i]));
-  }
-
-  this.bones = this.bones.sort(function(a, b) {
-    return a.id - b.id;
-  });
-
-  // combine objects and object_refs into one array and sort by id
-  this.objects = [];
-
-  json.object_ref = makeArray(json.object_ref);
-  for (i = 0, len = json.object_ref.length; i < len; i++) {
-    this.objects.push(new ObjRef().load(json.object_ref[i]));
-  }
-
-  this.objects = this.objects.sort(function(a, b) {
-    return a.id - b.id;
-  });
-
-  return this;
-}
-
-/**
- * @constructor
- */
-function Mainline() {
-  /** @type {Array.<MainlineKeyframe>} */
-  this.keyframes = [];
-}
-
-/**
- * @return {Mainline}
- * @param {Object.<string,?>} json
- */
-Mainline.prototype.load = function(data, json) {
-  json.key = makeArray(json.key);
-  for (var i = 0, len = json.key.length; i < len; i++) {
-    this.keyframes.push(new MainlineKeyframe().load(data, json.key[i]));
-  }
-  this.keyframes = this.keyframes.sort(Keyframe.compare);
-  return this;
-}
-
-/**
- * @constructor
- * @extends {Keyframe}
- * @param {string} type
- */
-function TimelineKeyframe(type = 'unknown') {
-  Keyframe.call(this);
-
-  /** @type {string} */
-  this.type = type;
-  /** @type {number} */
-  this.spin = 1; // 1: counter-clockwise, -1: clockwise
-  /** @type {number} */
-  this.curve = 1; // 0: instant, 1: linear, 2: quadratic, 3: cubic
-  /** @type {number} */
-  this.c1 = 0;
-  /** @type {number} */
-  this.c2 = 0;
-}
-
-TimelineKeyframe.prototype = Object.create(Keyframe.prototype);
-TimelineKeyframe.prototype.constructor = TimelineKeyframe;
-
-/**
- * @return {TimelineKeyframe}
- * @param {Object.<string,?>} json
- */
-TimelineKeyframe.prototype.load = function(json) {
-  Keyframe.prototype.load.call(this, json);
-  this.spin = loadInt(json, 'spin', 1);
-  this.curve = loadInt(json, 'curve_type', 1);
-  this.c1 = loadInt(json, 'c1', 0);
-  this.c2 = loadInt(json, 'c2', 0);
-  return this;
-}
-
-TimelineKeyframe.prototype.evaluateCurve = function(time, time1, time2) {
-  if (time1 === time2) {
-    return 0;
-  }
-  if (this.curve === 0) {
-    return 0;
-  } // instant
-  var tween = (time - time1) / (time2 - time1);
-  if (this.curve === 1) {
-    return tween;
-  } // linear
-  if (this.curve === 2) {
-    return interpolateQuadratic(0.0, this.c1, 1.0, tween);
-  }
-  if (this.curve === 3) {
-    return interpolateCubic(0.0, this.c1, this.c2, 1.0, tween);
-  }
-  return 0;
 }
 
 /**
@@ -1045,7 +1011,7 @@ ObjectTimelineKeyframe.prototype.constructor = ObjectTimelineKeyframe;
  */
 ObjectTimelineKeyframe.prototype.load = function(data, json) {
   TimelineKeyframe.prototype.load.call(this, json);
-  this.object = new Obj().load(data, json.object || {});
+  this.object = new SpriteObject().load(data, json.object || {});
   return this;
 }
 
@@ -1564,7 +1530,7 @@ SpriterAnimation.prototype.updateAnimation = function() {
     var data_object;
     for (i = 0, len = data_object_array.length; i < len; i++) {
       data_object = data_object_array[i];
-      var pose_object = pose_object_array[i] = (pose_object_array[i] || new Obj());
+      var pose_object = pose_object_array[i] = (pose_object_array[i] || new SpriteObject());
 
       var timelineID = data_object.timelineID;
       var keyframeID = data_object.keyframeID;

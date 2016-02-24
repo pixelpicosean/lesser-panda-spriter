@@ -253,271 +253,241 @@ Vector.prototype.selfTween = function(other, pct) {
   return Vector.tween(this, other, pct, this);
 }
 
-/**
- * @constructor
- */
-function Transform() {
-  this.position = new Vector();
-  this.rotation = new Angle();
-  this.scale = new Vector(1, 1);
-}
-
-/**
- * @return {Transform}
- * @param {Transform} other
- */
-Transform.prototype.copy = function(other) {
-  this.position.copy(other.position);
-  this.rotation.copy(other.rotation);
-  this.scale.copy(other.scale);
-  return this;
-}
-
-/**
- * @return {Transform}
- * @param {Object.<string,?>} json
- */
-Transform.prototype.load = function(json) {
-  this.position.x = loadFloat(json, 'x', 0);
-  this.position.y = loadFloat(json, 'y', 0);
-  this.rotation.deg = loadFloat(json, 'angle', 0);
-  this.scale.x = loadFloat(json, 'scale_x', 1);
-  this.scale.y = loadFloat(json, 'scale_y', 1);
-  return this;
-}
-
-/**
- * @return {boolean}
- * @param {Transform} a
- * @param {Transform} b
- * @param {number=} epsilon
- */
-Transform.equal = function(a, b, epsilon) {
-  epsilon = epsilon || 1e-6;
-  if (Math.abs(a.position.x - b.position.x) > epsilon) {
-    return false;
+class Transform {
+  constructor() {
+    this.position = new Vector();
+    this.rotation = new Angle();
+    this.scale = new Vector(1, 1);
   }
-  if (Math.abs(a.position.y - b.position.y) > epsilon) {
-    return false;
+  copy(other) {
+    this.position.copy(other.position);
+    this.rotation.copy(other.rotation);
+    this.scale.copy(other.scale);
+    return this;
   }
-  if (Math.abs(a.rotation.rad - b.rotation.rad) > epsilon) {
-    return false;
+  load(json) {
+    this.position.x = loadFloat(json, 'x', 0.0);
+    this.position.y = loadFloat(json, 'y', 0.0);
+    this.rotation.deg = loadFloat(json, 'angle', 0.0);
+    this.scale.x = loadFloat(json, 'scale_x', 1.0);
+    this.scale.y = loadFloat(json, 'scale_y', 1.0);
+    return this;
   }
-  if (Math.abs(a.scale.x - b.scale.x) > epsilon) {
-    return false;
+
+  static equal(a, b, epsilon = 1e-6) {
+    if (Math.abs(a.position.x - b.position.x) > epsilon) {
+      return false;
+    }
+    if (Math.abs(a.position.y - b.position.y) > epsilon) {
+      return false;
+    }
+    if (Math.abs(a.rotation.rad - b.rotation.rad) > epsilon) {
+      return false;
+    }
+    if (Math.abs(a.scale.x - b.scale.x) > epsilon) {
+      return false;
+    }
+    if (Math.abs(a.scale.y - b.scale.y) > epsilon) {
+      return false;
+    }
+    return true;
   }
-  if (Math.abs(a.scale.y - b.scale.y) > epsilon) {
-    return false;
+  static identity(out = new Transform()) {
+    out.position.x = 0.0;
+    out.position.y = 0.0;
+    out.rotation.rad = 0.0;
+    out.scale.x = 1.0;
+    out.scale.y = 1.0;
+    return out;
   }
-  return true;
-}
-
-/**
- * @return {Transform}
- * @param {Transform=} out
- */
-Transform.identity = function(out) {
-  out = out || new Transform();
-  out.position.x = 0;
-  out.position.y = 0;
-  out.rotation.rad = 0;
-  out.scale.x = 1;
-  out.scale.y = 1;
-  return out;
-}
-
-/**
- * @return {Transform}
- * @param {Transform} space
- * @param {number} x
- * @param {number} y
- */
-Transform.translate = function(space, x, y) {
-  x *= space.scale.x;
-  y *= space.scale.y;
-  var rad = space.rotation.rad;
-  var c = Math.cos(rad);
-  var s = Math.sin(rad);
-  var tx = c * x - s * y;
-  var ty = s * x + c * y;
-  space.position.x += tx;
-  space.position.y += ty;
-  return space;
-}
-
-/**
- * @return {Transform}
- * @param {Transform} space
- * @param {number} rad
- */
-Transform.rotate = function(space, rad) {
-  space.rotation.rad = wrapAngleRadians(space.rotation.rad + rad);
-  return space;
-}
-
-/**
- * @return {Transform}
- * @param {Transform} space
- * @param {number} x
- * @param {number} y
- */
-Transform.scale = function(space, x, y) {
-  space.scale.x *= x;
-  space.scale.y *= y;
-  return space;
-}
-
-/**
- * @return {Transform}
- * @param {Transform} space
- * @param {Transform=} out
- */
-Transform.invert = function(space, out) {
-  // invert
-  // out.sca = space.sca.inv();
-  // out.rot = space.rot.inv();
-  // out.pos = space.pos.neg().rotate(space.rot.inv()).mul(space.sca.inv());
-
-  out = out || new Transform();
-  var inv_scale_x = 1 / space.scale.x;
-  var inv_scale_y = 1 / space.scale.y;
-  var inv_rotation = -space.rotation.rad;
-  var inv_x = -space.position.x;
-  var inv_y = -space.position.y;
-  out.scale.x = inv_scale_x;
-  out.scale.y = inv_scale_y;
-  out.rotation.rad = inv_rotation;
-  var x = inv_x;
-  var y = inv_y;
-  var rad = inv_rotation;
-  var c = Math.cos(rad);
-  var s = Math.sin(rad);
-  var tx = c * x - s * y;
-  var ty = s * x + c * y;
-  out.position.x = tx * inv_scale_x;
-  out.position.y = ty * inv_scale_y;
-  return out;
-}
-
-/**
- * @return {Transform}
- * @param {Transform} a
- * @param {Transform} b
- * @param {Transform=} out
- */
-Transform.combine = function(a, b, out) {
-  // combine
-  // out.pos = b.pos.mul(a.sca).rotate(a.rot).add(a.pos);
-  // out.rot = b.rot.mul(a.rot);
-  // out.sca = b.sca.mul(a.sca);
-
-  out = out || new Transform();
-  var x = b.position.x * a.scale.x;
-  var y = b.position.y * a.scale.y;
-  var rad = a.rotation.rad;
-  var c = Math.cos(rad);
-  var s = Math.sin(rad);
-  var tx = c * x - s * y;
-  var ty = s * x + c * y;
-  out.position.x = tx + a.position.x;
-  out.position.y = ty + a.position.y;
-  if ((a.scale.x * a.scale.y) < 0) {
-    out.rotation.rad = wrapAngleRadians(a.rotation.rad - b.rotation.rad);
-  } else {
-    out.rotation.rad = wrapAngleRadians(b.rotation.rad + a.rotation.rad);
+  /**
+   * @return {Transform}
+   * @param {Transform} space
+   * @param {number} x
+   * @param {number} y
+   */
+  static translate(space, x, y) {
+    x *= space.scale.x;
+    y *= space.scale.y;
+    let rad = space.rotation.rad;
+    let c = Math.cos(rad);
+    let s = Math.sin(rad);
+    let tx = c * x - s * y;
+    let ty = s * x + c * y;
+    space.position.x += tx;
+    space.position.y += ty;
+    return space;
   }
-  out.scale.x = b.scale.x * a.scale.x;
-  out.scale.y = b.scale.y * a.scale.y;
-  return out;
-}
 
-/**
- * @return {Transform}
- * @param {Transform} ab
- * @param {Transform} a
- * @param {Transform=} out
- */
-Transform.extract = function(ab, a, out) {
-  // extract
-  // out.sca = ab.sca.mul(a.sca.inv());
-  // out.rot = ab.rot.mul(a.rot.inv());
-  // out.pos = ab.pos.add(a.pos.neg()).rotate(a.rot.inv()).mul(a.sca.inv());
-
-  out = out || new Transform();
-  out.scale.x = ab.scale.x / a.scale.x;
-  out.scale.y = ab.scale.y / a.scale.y;
-  if ((a.scale.x * a.scale.y) < 0) {
-    out.rotation.rad = wrapAngleRadians(a.rotation.rad + ab.rotation.rad);
-  } else {
-    out.rotation.rad = wrapAngleRadians(ab.rotation.rad - a.rotation.rad);
+  /**
+   * @return {Transform}
+   * @param {Transform} space
+   * @param {number} rad
+   */
+  static rotate(space, rad) {
+    space.rotation.rad = wrapAngleRadians(space.rotation.rad + rad);
+    return space;
   }
-  var x = ab.position.x - a.position.x;
-  var y = ab.position.y - a.position.y;
-  var rad = -a.rotation.rad;
-  var c = Math.cos(rad);
-  var s = Math.sin(rad);
-  var tx = c * x - s * y;
-  var ty = s * x + c * y;
-  out.position.x = tx / a.scale.x;
-  out.position.y = ty / a.scale.y;
-  return out;
-}
 
-/**
- * @return {Vector}
- * @param {Transform} space
- * @param {Vector} v
- * @param {Vector=} out
- */
-Transform.transform = function(space, v, out) {
-  out = out || new Vector();
-  var x = v.x * space.scale.x;
-  var y = v.y * space.scale.y;
-  var rad = space.rotation.rad;
-  var c = Math.cos(rad);
-  var s = Math.sin(rad);
-  var tx = c * x - s * y;
-  var ty = s * x + c * y;
-  out.x = tx + space.position.x;
-  out.y = ty + space.position.y;
-  return out;
-}
+  /**
+   * @return {Transform}
+   * @param {Transform} space
+   * @param {number} x
+   * @param {number} y
+   */
+  static scale(space, x, y) {
+    space.scale.x *= x;
+    space.scale.y *= y;
+    return space;
+  }
 
-/**
- * @return {Vector}
- * @param {Transform} space
- * @param {Vector} v
- * @param {Vector=} out
- */
-Transform.untransform = function(space, v, out) {
-  out = out || new Vector();
-  var x = v.x - space.position.x;
-  var y = v.y - space.position.y;
-  var rad = -space.rotation.rad;
-  var c = Math.cos(rad);
-  var s = Math.sin(rad);
-  var tx = c * x - s * y;
-  var ty = s * x + c * y;
-  out.x = tx / space.scale.x;
-  out.y = ty / space.scale.y;
-  return out;
-}
+  /**
+   * @return {Transform}
+   * @param {Transform} space
+   * @param {Transform=} out
+   */
+  static invert(space, out = new Transform()) {
+    // invert
+    // out.sca = space.sca.inv();
+    // out.rot = space.rot.inv();
+    // out.pos = space.pos.neg().rotate(space.rot.inv()).mul(space.sca.inv());
 
-/**
- * @return {Transform}
- * @param {Transform} a
- * @param {Transform} b
- * @param {number} tween
- * @param {number} spin
- * @param {Transform=} out
- */
-Transform.tween = function(a, b, twn, spin, out) {
-  out.position.x = tween(a.position.x, b.position.x, twn);
-  out.position.y = tween(a.position.y, b.position.y, twn);
-  out.rotation.rad = tweenAngleRadians(a.rotation.rad, b.rotation.rad, twn, spin);
-  out.scale.x = tween(a.scale.x, b.scale.x, twn);
-  out.scale.y = tween(a.scale.y, b.scale.y, twn);
-  return out;
+    let inv_scale_x = 1.0 / space.scale.x;
+    let inv_scale_y = 1.0 / space.scale.y;
+    let inv_rotation = -space.rotation.rad;
+    let inv_x = -space.position.x;
+    let inv_y = -space.position.y;
+    out.scale.x = inv_scale_x;
+    out.scale.y = inv_scale_y;
+    out.rotation.rad = inv_rotation;
+    let x = inv_x;
+    let y = inv_y;
+    let rad = inv_rotation;
+    let c = Math.cos(rad);
+    let s = Math.sin(rad);
+    let tx = c * x - s * y;
+    let ty = s * x + c * y;
+    out.position.x = tx * inv_scale_x;
+    out.position.y = ty * inv_scale_y;
+    return out;
+  }
+
+  /**
+   * @return {Transform}
+   * @param {Transform} a
+   * @param {Transform} b
+   * @param {Transform=} out
+   */
+  static combine(a, b, out = new Transform()) {
+    // combine
+    // out.pos = b.pos.mul(a.sca).rotate(a.rot).add(a.pos);
+    // out.rot = b.rot.mul(a.rot);
+    // out.sca = b.sca.mul(a.sca);
+
+    let x = b.position.x * a.scale.x;
+    let y = b.position.y * a.scale.y;
+    let rad = a.rotation.rad;
+    let c = Math.cos(rad);
+    let s = Math.sin(rad);
+    let tx = c * x - s * y;
+    let ty = s * x + c * y;
+    out.position.x = tx + a.position.x;
+    out.position.y = ty + a.position.y;
+    if ((a.scale.x * a.scale.y) < 0.0) {
+      out.rotation.rad = wrapAngleRadians(a.rotation.rad - b.rotation.rad);
+    } else {
+      out.rotation.rad = wrapAngleRadians(b.rotation.rad + a.rotation.rad);
+    }
+    out.scale.x = b.scale.x * a.scale.x;
+    out.scale.y = b.scale.y * a.scale.y;
+    return out;
+  }
+
+  /**
+   * @return {Transform}
+   * @param {Transform} ab
+   * @param {Transform} a
+   * @param {Transform=} out
+   */
+  static extract(ab, a, out = new Transform()) {
+    // extract
+    // out.sca = ab.sca.mul(a.sca.inv());
+    // out.rot = ab.rot.mul(a.rot.inv());
+    // out.pos = ab.pos.add(a.pos.neg()).rotate(a.rot.inv()).mul(a.sca.inv());
+
+    out.scale.x = ab.scale.x / a.scale.x;
+    out.scale.y = ab.scale.y / a.scale.y;
+    if ((a.scale.x * a.scale.y) < 0.0) {
+      out.rotation.rad = wrapAngleRadians(a.rotation.rad + ab.rotation.rad);
+    } else {
+      out.rotation.rad = wrapAngleRadians(ab.rotation.rad - a.rotation.rad);
+    }
+    let x = ab.position.x - a.position.x;
+    let y = ab.position.y - a.position.y;
+    let rad = -a.rotation.rad;
+    let c = Math.cos(rad);
+    let s = Math.sin(rad);
+    let tx = c * x - s * y;
+    let ty = s * x + c * y;
+    out.position.x = tx / a.scale.x;
+    out.position.y = ty / a.scale.y;
+    return out;
+  }
+
+  /**
+   * @return {Vector}
+   * @param {Transform} space
+   * @param {Vector} v
+   * @param {Vector=} out
+   */
+  static transform(space, v, out = new Vector()) {
+    let x = v.x * space.scale.x;
+    let y = v.y * space.scale.y;
+    let rad = space.rotation.rad;
+    let c = Math.cos(rad);
+    let s = Math.sin(rad);
+    let tx = c * x - s * y;
+    let ty = s * x + c * y;
+    out.x = tx + space.position.x;
+    out.y = ty + space.position.y;
+    return out;
+  }
+
+  /**
+   * @return {Vector}
+   * @param {Transform} space
+   * @param {Vector} v
+   * @param {Vector=} out
+   */
+  static untransform(space, v, out = new Vector()) {
+    let x = v.x - space.position.x;
+    let y = v.y - space.position.y;
+    let rad = -space.rotation.rad;
+    let c = Math.cos(rad);
+    let s = Math.sin(rad);
+    let tx = c * x - s * y;
+    let ty = s * x + c * y;
+    out.x = tx / space.scale.x;
+    out.y = ty / space.scale.y;
+    return out;
+  }
+
+  /**
+   * @return {Transform}
+   * @param {Transform} a
+   * @param {Transform} b
+   * @param {number} tween
+   * @param {number} spin
+   * @param {Transform=} out
+   */
+  static tween(a, b, twn, spin, out) {
+    out.position.x = tween(a.position.x, b.position.x, twn);
+    out.position.y = tween(a.position.y, b.position.y, twn);
+    out.rotation.rad = tweenAngleRadians(a.rotation.rad, b.rotation.rad, twn, spin);
+    out.scale.x = tween(a.scale.x, b.scale.x, twn);
+    out.scale.y = tween(a.scale.y, b.scale.y, twn);
+    return out;
+  }
 }
 
 /**

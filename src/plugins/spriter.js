@@ -54,203 +54,188 @@ function getData(sconKey) {
 // Add parser as loader middleware
 loader.addMiddleware(atlasParser);
 
-/**
- * @constructor
- * @param {number=} rad
- */
-function Angle(rad = 0.0) {
-  this.rad = rad;
-}
+class Angle {
+  constructor(rad = 0) {
+    this.rad = rad;
+  }
 
-Object.defineProperty(Angle.prototype, 'deg', {
-  /** @this {Angle} */
-  get: function() {
+  get deg() {
     return this.rad * 180 / Math.PI;
-  },
-  /** @this {Angle} */
-  set: function(value) {
+  }
+  set deg(value) {
     this.rad = value * Math.PI / 180;
   }
-});
 
-Object.defineProperty(Angle.prototype, 'cos', {
-  /** @this {Angle} */
-  get: function() {
+  get cos() {
     return Math.cos(this.rad);
   }
-});
 
-Object.defineProperty(Angle.prototype, 'sin', {
-  /** @this {Angle} */
-  get: function() {
+  get sin() {
     return Math.sin(this.rad);
   }
-});
 
-/**
- * @return {Angle}
- */
-Angle.prototype.selfIdentity = function() {
-  this.rad = 0.0;
-  return this;
+  /**
+   * @return {Angle}
+   */
+  selfIdentity() {
+    this.rad = 0.0;
+    return this;
+  }
+
+  /**
+   * @return {Angle}
+   * @param {Angle} other
+   */
+  copy(other) {
+    this.rad = other.rad;
+    return this;
+  }
+
+  /**
+   * @return {Angle}
+   * @param {Angle} a
+   * @param {Angle} b
+   * @param {Angle=} out
+   */
+  static add(a, b, out) {
+    out = out || new Angle();
+    out.rad = wrapAngleRadians(a.rad + b.rad);
+    return out;
+  }
+
+  /**
+   * @return {Angle}
+   * @param {Angle} other
+   * @param {Angle=} out
+   */
+  add(other, out) {
+    return Angle.add(this, other, out);
+  }
+
+  /**
+   * @return {Angle}
+   * @param {Angle} other
+   */
+  selfAdd(other) {
+    return Angle.add(this, other, this);
+  }
+
+  /**
+   * @return {Angle}
+   * @param {Angle} a
+   * @param {Angle} b
+   * @param {number} pct
+   * @param {number} spin
+   * @param {Angle=} out
+   */
+  static tween(a, b, pct, spin, out) {
+    out = out || new Angle();
+    out.rad = tweenAngleRadians(a.rad, b.rad, pct, spin);
+    return out;
+  }
+
+  /**
+   * @return {Angle}
+   * @param {Angle} other
+   * @param {number} pct
+   * @param {number} spin
+   * @param {Angle=} out
+   */
+  tween(other, pct, spin, out) {
+    return Angle.tween(this, other, pct, spin, out);
+  }
+
+  /**
+   * @return {Angle}
+   * @param {Angle} other
+   * @param {number} pct
+   * @param {number} spin
+   */
+  selfTween(other, pct, spin) {
+    return Angle.tween(this, other, pct, spin, this);
+  }
 }
 
-/**
- * @return {Angle}
- * @param {Angle} other
- */
-Angle.prototype.copy = function(other) {
-  this.rad = other.rad;
-  return this;
-}
+class Vector {
+  constructor(x = 0, y = 0) {
+    this.x = x;
+    this.y = y;
+  }
 
-/**
- * @return {Angle}
- * @param {Angle} a
- * @param {Angle} b
- * @param {Angle=} out
- */
-Angle.add = function(a, b, out) {
-  out = out || new Angle();
-  out.rad = wrapAngleRadians(a.rad + b.rad);
-  return out;
-}
+  /**
+   * @param {Vector} other
+   * @return {Vector}
+   */
+  copy(other) {
+    this.x = other.x;
+    this.y = other.y;
+    return this;
+  }
 
-/**
- * @return {Angle}
- * @param {Angle} other
- * @param {Angle=} out
- */
-Angle.prototype.add = function(other, out) {
-  return Angle.add(this, other, out);
-}
+  /**
+   * @param {Vector} a
+   * @param {Vector} b
+   * @param {Vector=} out
+   * @return {Vector}
+   */
+  static add(a, b, out) {
+    out = out || new Vector();
+    out.x = a.x + b.x;
+    out.y = a.y + b.y;
+    return out;
+  }
 
-/**
- * @return {Angle}
- * @param {Angle} other
- */
-Angle.prototype.selfAdd = function(other) {
-  return Angle.add(this, other, this);
-}
+  /**
+   * @param {Vector} other
+   * @param {Vector=} out
+   * @return {Vector}
+   */
+  add(other, out) {
+    return Vector.add(this, other, out);
+  }
 
-/**
- * @return {Angle}
- * @param {Angle} a
- * @param {Angle} b
- * @param {number} pct
- * @param {number} spin
- * @param {Angle=} out
- */
-Angle.tween = function(a, b, pct, spin, out) {
-  out = out || new Angle();
-  out.rad = tweenAngleRadians(a.rad, b.rad, pct, spin);
-  return out;
-}
+  /**
+   * @param {Vector} other
+   * @return {Vector}
+   */
+  selfAdd(other) {
+    this.x += other.x;
+    this.y += other.y;
+    return this;
+  }
 
-/**
- * @return {Angle}
- * @param {Angle} other
- * @param {number} pct
- * @param {number} spin
- * @param {Angle=} out
- */
-Angle.prototype.tween = function(other, pct, spin, out) {
-  return Angle.tween(this, other, pct, spin, out);
-}
+  /**
+   * @param {Vector} a
+   * @param {Vector} b
+   * @param {number} pct
+   * @param {Vector=} out
+   * @return {Vector}
+   */
+  static tween(a, b, pct, out) {
+    out = out || new Vector();
+    out.x = tween(a.x, b.x, pct);
+    out.y = tween(a.y, b.y, pct);
+    return out;
+  }
 
-/**
- * @return {Angle}
- * @param {Angle} other
- * @param {number} pct
- * @param {number} spin
- */
-Angle.prototype.selfTween = function(other, pct, spin) {
-  return Angle.tween(this, other, pct, spin, this);
-}
+  /**
+   * @param {Vector} other
+   * @param {number} pct
+   * @param {Vector=} out
+   * @return {Vector}
+   */
+  tween(other, pct, out) {
+    return Vector.tween(this, other, pct, out);
+  }
 
-/**
- * @constructor
- * @param {number=} x
- * @param {number=} y
- */
-function Vector(x = 0.0, y = 0.0) {
-  this.x = x;
-  this.y = y;
-}
-
-/**
- * @return {Vector}
- * @param {Vector} other
- */
-Vector.prototype.copy = function(other) {
-  this.x = other.x;
-  this.y = other.y;
-  return this;
-}
-
-/**
- * @return {Vector}
- * @param {Vector} a
- * @param {Vector} b
- * @param {Vector=} out
- */
-Vector.add = function(a, b, out) {
-  out = out || new Vector();
-  out.x = a.x + b.x;
-  out.y = a.y + b.y;
-  return out;
-}
-
-/**
- * @return {Vector}
- * @param {Vector} other
- * @param {Vector=} out
- */
-Vector.prototype.add = function(other, out) {
-  return Vector.add(this, other, out);
-}
-
-/**
- * @return {Vector}
- * @param {Vector} other
- */
-Vector.prototype.selfAdd = function(other) {
-  this.x += other.x;
-  this.y += other.y;
-  return this;
-}
-
-/**
- * @return {Vector}
- * @param {Vector} a
- * @param {Vector} b
- * @param {number} pct
- * @param {Vector=} out
- */
-Vector.tween = function(a, b, pct, out) {
-  out = out || new Vector();
-  out.x = tween(a.x, b.x, pct);
-  out.y = tween(a.y, b.y, pct);
-  return out;
-}
-
-/**
- * @return {Vector}
- * @param {Vector} other
- * @param {number} pct
- * @param {Vector=} out
- */
-Vector.prototype.tween = function(other, pct, out) {
-  return Vector.tween(this, other, pct, out);
-}
-
-/**
- * @return {Vector}
- * @param {Vector} other
- * @param {number} pct
- */
-Vector.prototype.selfTween = function(other, pct) {
-  return Vector.tween(this, other, pct, this);
+  /**
+   * @param {Vector} other
+   * @param {number} pct
+   * @return {Vector}
+   */
+  selfTween(other, pct) {
+    return Vector.tween(this, other, pct, this);
+  }
 }
 
 class Transform {

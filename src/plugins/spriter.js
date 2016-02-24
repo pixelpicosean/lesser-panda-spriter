@@ -58,8 +58,8 @@ loader.addMiddleware(atlasParser);
  * @constructor
  * @param {number=} rad
  */
-function Angle(rad) {
-  this.rad = rad || 0;
+function Angle(rad = 0.0) {
+  this.rad = rad;
 }
 
 Object.defineProperty(Angle.prototype, 'deg', {
@@ -91,7 +91,7 @@ Object.defineProperty(Angle.prototype, 'sin', {
  * @return {Angle}
  */
 Angle.prototype.selfIdentity = function() {
-  this.rad = 0;
+  this.rad = 0.0;
   return this;
 }
 
@@ -112,7 +112,7 @@ Angle.prototype.copy = function(other) {
  */
 Angle.add = function(a, b, out) {
   out = out || new Angle();
-  out.rad = spine.wrapAngleRadians(a.rad + b.rad);
+  out.rad = wrapAngleRadians(a.rad + b.rad);
   return out;
 }
 
@@ -173,7 +173,7 @@ Angle.prototype.selfTween = function(other, pct, spin) {
  * @param {number=} x
  * @param {number=} y
  */
-function Vector(x = 0, y = 0) {
+function Vector(x = 0.0, y = 0.0) {
   this.x = x;
   this.y = y;
 }
@@ -215,7 +215,6 @@ Vector.prototype.add = function(other, out) {
  * @param {Vector} other
  */
 Vector.prototype.selfAdd = function(other) {
-  //return Vector.add(this, other, this);
   this.x += other.x;
   this.y += other.y;
   return this;

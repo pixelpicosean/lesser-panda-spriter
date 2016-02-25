@@ -1297,6 +1297,7 @@ class Entity {
     this.indexedVars = {};
 
     // Create variables
+    json.var_defs = json.var_defs || [];
     for (let i = 0, len = json.var_defs.length; i < len; i++) {
       let variable = new Variable(json.var_defs[i]);
       this.namedVars[variable.name] = variable;
@@ -1434,7 +1435,7 @@ class SpriterAnimation extends PIXI.Container {
             // Remove from the updating list
             if (this._willTick) {
               this._willTick = false;
-              core.removeObject(this);
+              PIXI.removeObject(this);
             }
             this.emit('finish', this.currAnimName);
           }
@@ -1701,7 +1702,7 @@ class Data {
 
       for (j = 0, jlen = folder.file.length; j < jlen; j++) {
         file = folder.file[j];
-        texture = PIXI.utils.TextureCache[file.name];
+        texture = PIXI.Texture.fromAsset(file.name);
         texture.pivot = new Vector(file.pivot_x || 0, file.pivot_y || 1);
         files.push(texture);
       }
@@ -1711,6 +1712,7 @@ class Data {
 
     // Construct tag map
     let tag;
+    scon.tag_list = scon.tag_list || [];
     for (i = 0, len = scon.tag_list.length; i < len; i++) {
       tag = scon.tag_list[i];
       this.tagMap[tag.id] = tag.name;
